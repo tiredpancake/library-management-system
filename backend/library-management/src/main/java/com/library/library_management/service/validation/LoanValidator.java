@@ -4,6 +4,7 @@ import com.library.library_management.config.LibraryProperties;
 import com.library.library_management.entity.Enums;
 import com.library.library_management.entity.Member;
 import com.library.library_management.entity.Book;
+import com.library.library_management.exception.BusinessException;
 import com.library.library_management.repository.FineRepository;
 import com.library.library_management.repository.LoanTransactionRepository;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,7 @@ public class LoanValidator {
     public void validateMember(Member member) {
 
         if (member.getStatus() != Enums.MemberStatus.ACTIVE) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Member is not active"
             );
         }
@@ -34,14 +35,14 @@ public class LoanValidator {
     public void validateBook(Book book) {
 
         if (book.getStatus() != Enums.BookStatus.ACTIVE) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Book is not active"
             );
         }
 
 
         if (book.getAvailableCopies() <= 0) {
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Book is not available"
             );
         }
@@ -57,7 +58,7 @@ public class LoanValidator {
 
         if(activeLoans >= properties.getMaxActiveLoans()){
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Member reached maximum active loans"
             );
         }
@@ -74,7 +75,7 @@ public class LoanValidator {
 
         if(hasOverdue){
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Member has overdue books"
             );
         }
@@ -94,7 +95,7 @@ public class LoanValidator {
                 )
         ) > 0){
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Member has too much unpaid fine"
             );
         }

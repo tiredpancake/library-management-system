@@ -1,5 +1,6 @@
 package com.library.library_management.service.impl;
 
+import com.library.library_management.exception.BusinessException;
 import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.AppUserRepository;
 import com.library.library_management.repository.BookRepository;
@@ -220,7 +221,7 @@ public class BookServiceImpl implements BookService {
                         SecurityUtils.getCurrentUsername()
                 )
                 .orElseThrow(
-                        () -> new RuntimeException("User not found")
+                        () -> new BusinessException("User not found")
                 );
     }
 

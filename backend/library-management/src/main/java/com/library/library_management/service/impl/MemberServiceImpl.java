@@ -5,6 +5,7 @@ import com.library.library_management.dto.member.MemberResponse;
 import com.library.library_management.dto.member.UpdateMemberRequest;
 import com.library.library_management.entity.AppUser;
 import com.library.library_management.entity.MemberHistory;
+import com.library.library_management.exception.BusinessException;
 import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.AppUserRepository;
 import com.library.library_management.repository.MemberHistoryRepository;
@@ -236,7 +237,7 @@ public class MemberServiceImpl implements MemberService {
                         SecurityUtils.getCurrentUsername()
                 )
                 .orElseThrow(
-                        () -> new RuntimeException("User not found")
+                        () -> new BusinessException("User not found")
                 );
     }
 

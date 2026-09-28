@@ -227,7 +227,7 @@ public class LoanServiceImpl implements LoanService {
                 loanRepository
                         .findByTrackingCode(request.trackingCode())
                         .orElseThrow(
-                                () -> new RuntimeException(
+                                () -> new BusinessException(
                                         "Loan not found"
                                 )
                         );
@@ -235,15 +235,15 @@ public class LoanServiceImpl implements LoanService {
 
         if (oldLoan.getReturnDate() != null) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Book already returned"
             );
         }
 
 
-        if (oldLoan.getRenewCount() >= 2) {
+        if (oldLoan.getRenewCount() >= properties.getMaxRenewCount()) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Maximum renew limit reached"
             );
         }
@@ -324,7 +324,7 @@ public class LoanServiceImpl implements LoanService {
                         SecurityUtils.getCurrentUsername()
                 )
                 .orElseThrow(
-                        () -> new RuntimeException("User not found")
+                        () -> new BusinessException("User not found")
                 );
     }
 

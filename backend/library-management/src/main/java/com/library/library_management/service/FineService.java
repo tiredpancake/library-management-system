@@ -7,9 +7,7 @@ public interface FineService {
 
     FineResponse getFineByLoan(Long loanId);
 
-    FineResponse payFine(
-            Long fineId,
-            PayFineRequest request
-    );
+    FineResponse payFine(PayFineRequest request);
+
 
 }

@@ -4,8 +4,11 @@ import com.library.library_management.dto.fine.FineResponse;
 import com.library.library_management.dto.fine.PayFineRequest;
 import com.library.library_management.entity.Enums;
 import com.library.library_management.entity.Fine;
+import com.library.library_management.entity.Member;
+import com.library.library_management.exception.BusinessException;
 import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.FineRepository;
+import com.library.library_management.repository.MemberRepository;
 import com.library.library_management.service.FineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Service
@@ -21,7 +25,7 @@ public class FineServiceImpl implements FineService {
 
 
     private final FineRepository fineRepository;
-
+    private final MemberRepository memberRepository;
 
     @Override
     public FineResponse getFineByLoan(Long loanId) {
@@ -41,73 +45,113 @@ public class FineServiceImpl implements FineService {
 
     @Override
     @Transactional
-    public FineResponse payFine(
-            Long fineId,
-            PayFineRequest request
-    ) {
+    public FineResponse payFine(PayFineRequest request) {
 
 
-        Fine fine = fineRepository
-                .findById(fineId)
+        Member member = memberRepository
+                .findByMembershipNumber(request.membershipNumber())
                 .orElseThrow(
                         () -> new ResourceNotFoundException(
-                                "Fine not found"
+                                "Member not found"
                         )
                 );
 
 
-        BigDecimal currentPaidAmount =
-                fine.getPaidAmount() == null
-                        ? BigDecimal.ZERO
-                        : fine.getPaidAmount();
-
-
-        BigDecimal newPaidAmount =
-                currentPaidAmount.add(
-                        request.amount()
+        BigDecimal unpaidAmount =
+                fineRepository.sumUnpaidFineByMemberId(
+                        member.getId()
                 );
 
 
-        if (newPaidAmount.compareTo(
-                fine.getAmount()
-        ) >= 0) {
+        if(request.amount().compareTo(unpaidAmount) > 0){
 
-
-            fine.setPaidAmount(
-                    fine.getAmount()
-            );
-
-
-            fine.setStatus(
-                    Enums.FineStatus.PAID
-            );
-
-
-            fine.setPaidAt(
-                    LocalDateTime.now()
-            );
-
-
-        } else {
-
-
-            fine.setPaidAmount(
-                    newPaidAmount
-            );
-
-
-            fine.setStatus(
-                    Enums.FineStatus.PARTIALLY_PAID
+            throw new BusinessException(
+                    "Payment amount exceeds unpaid fine amount"
             );
 
         }
 
 
-        Fine savedFine =
-                fineRepository.save(fine);
+        List<Fine> fines =
+                fineRepository
+                        .findByLoanTransactionMemberIdAndStatusNot(
+                                member.getId(),
+                                Enums.FineStatus.PAID
+                        );
 
 
-        return mapToResponse(savedFine);
+        BigDecimal remainingPayment = request.amount();
+
+
+        Fine lastUpdatedFine = null;
+
+
+        for(Fine fine : fines){
+
+
+            if(remainingPayment.compareTo(BigDecimal.ZERO) <= 0){
+                break;
+            }
+
+
+            BigDecimal remainingFine =
+                    fine.getAmount()
+                            .subtract(
+                                    fine.getPaidAmount()
+                            );
+
+
+            BigDecimal payment =
+                    remainingPayment.min(
+                            remainingFine
+                    );
+
+
+            fine.setPaidAmount(
+                    fine.getPaidAmount()
+                            .add(payment)
+            );
+
+
+            remainingPayment =
+                    remainingPayment.subtract(payment);
+
+
+
+            if(fine.getPaidAmount()
+                    .compareTo(fine.getAmount()) >= 0){
+
+                fine.setStatus(
+                        Enums.FineStatus.PAID
+                );
+
+                fine.setPaidAt(
+                        LocalDateTime.now()
+                );
+
+            } else {
+
+                fine.setStatus(
+                        Enums.FineStatus.PARTIALLY_PAID
+                );
+
+            }
+
+
+            lastUpdatedFine =
+                    fineRepository.save(fine);
+
+        }
+
+        if(lastUpdatedFine == null){
+
+            throw new BusinessException(
+                    "No unpaid fine found for this member"
+            );
+        }
+        return mapToResponse(lastUpdatedFine);
+
+
     }
 
 
