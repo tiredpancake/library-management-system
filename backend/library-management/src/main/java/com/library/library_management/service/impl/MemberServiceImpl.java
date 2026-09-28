@@ -5,10 +5,12 @@ import com.library.library_management.dto.member.MemberResponse;
 import com.library.library_management.dto.member.UpdateMemberRequest;
 import com.library.library_management.entity.AppUser;
 import com.library.library_management.entity.MemberHistory;
+import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.AppUserRepository;
 import com.library.library_management.repository.MemberHistoryRepository;
 import com.library.library_management.repository.MemberRepository;
 import com.library.library_management.service.MemberService;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.library.library_management.exception.DuplicateResourceException;
@@ -26,6 +28,7 @@ public class MemberServiceImpl implements MemberService {
     private final MemberHistoryRepository memberHistoryRepository;
 
     @Override
+    @Transactional
     public MemberResponse createMember(CreateMemberRequest request) {
         if (memberRepository.existsByNationalCode(request.nationalCode())) {
             throw new DuplicateResourceException(
@@ -74,7 +77,7 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepository
                 .findByMembershipNumber(membershipNumber)
                 .orElseThrow(
-                        () -> new RuntimeException("Member not found")
+                        () -> new ResourceNotFoundException("Member not found")
                 );
 
         return mapToResponse(member);
@@ -86,7 +89,7 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepository
                 .findByNationalCode(nationalCode)
                 .orElseThrow(
-                        () -> new RuntimeException("Member not found")
+                        () -> new ResourceNotFoundException("Member not found")
                 );
 
         return mapToResponse(member);
@@ -94,10 +97,11 @@ public class MemberServiceImpl implements MemberService {
 
 
     @Override
+    @Transactional
     public MemberResponse updateMember(Long id, UpdateMemberRequest request) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(
-                        () -> new RuntimeException("Member not found")
+                        () -> new ResourceNotFoundException("Member not found")
                 );
 
 
@@ -229,7 +233,7 @@ public class MemberServiceImpl implements MemberService {
         return appUserRepository
                 .findByUsername("admin")
                 .orElseThrow(
-                        () -> new RuntimeException("Admin user not found")
+                        () -> new ResourceNotFoundException("Admin user not found")
                 );
     }
 

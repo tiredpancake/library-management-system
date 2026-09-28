@@ -13,6 +13,7 @@ import com.library.library_management.entity.Book;
 import com.library.library_management.entity.AppUser;
 import com.library.library_management.entity.Enums;
 import com.library.library_management.exception.DuplicateResourceException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +27,7 @@ public class BookServiceImpl implements BookService {
 
 
     @Override
+    @Transactional
     public BookResponse createBook(CreateBookRequest request) {
         if (bookRepository.existsByIsbn(request.isbn())) {
 
@@ -96,7 +98,7 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository
                 .findByBookCode(bookCode)
                 .orElseThrow(
-                        () -> new RuntimeException("Book not found")
+                        () -> new ResourceNotFoundException("Book not found")
                 );
 
         return mapToResponse(book);
@@ -104,11 +106,12 @@ public class BookServiceImpl implements BookService {
 
 
     @Override
+    @Transactional
     public BookResponse updateBook(Long id, UpdateBookRequest request) {
 
         Book book = bookRepository.findById(id)
                 .orElseThrow(
-                        () -> new RuntimeException("Book not found")
+                        () -> new ResourceNotFoundException("Book not found")
                 );
 
 
@@ -154,7 +157,7 @@ public class BookServiceImpl implements BookService {
 
 
             if (newTotalCopies < 0) {
-                throw new RuntimeException(
+                throw new ResourceNotFoundException(
                         "Total copies cannot be negative"
                 );
             }
@@ -169,7 +172,7 @@ public class BookServiceImpl implements BookService {
 
             if (newAvailableCopies < 0) {
 
-                throw new RuntimeException(
+                throw new ResourceNotFoundException(
                         "Cannot reduce copies because some books are borrowed"
                 );
             }
@@ -214,7 +217,7 @@ public class BookServiceImpl implements BookService {
         return appUserRepository
                 .findByUsername("admin")
                 .orElseThrow(
-                        () -> new RuntimeException("Admin user not found")
+                        () -> new ResourceNotFoundException("Admin user not found")
                 );
     }
 

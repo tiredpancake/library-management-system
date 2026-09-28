@@ -1,8 +1,11 @@
 package com.library.library_management.service.impl;
 
 import com.library.library_management.dto.loan.*;
+import com.library.library_management.exception.BusinessException;
+import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.*;
 import com.library.library_management.service.LoanService;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.library.library_management.entity.*;
@@ -25,30 +28,31 @@ public class LoanServiceImpl implements LoanService {
 
 
     @Override
+    @Transactional
     public LoanResponse borrowBook(BorrowRequest request) {
         Member member = memberRepository
                 .findByMembershipNumber(request.membershipNumber())
                 .orElseThrow(
-                        () -> new RuntimeException("Member not found")
+                        () -> new ResourceNotFoundException("Member not found")
                 );
 
 
         Book book = bookRepository
                 .findByBookCode(request.bookCode())
                 .orElseThrow(
-                        () -> new RuntimeException("Book not found")
+                        () -> new ResourceNotFoundException("Book not found")
                 );
 
         if (member.getStatus() != Enums.MemberStatus.ACTIVE) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Member is not active"
             );
         }
 
         if (book.getAvailableCopies() <= 0) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Book is not available"
             );
         }
@@ -108,17 +112,18 @@ public class LoanServiceImpl implements LoanService {
 
 
     @Override
+    @Transactional
     public LoanResponse returnBook(ReturnRequest request) {
         LoanTransaction loan = loanRepository
                 .findByTrackingCode(request.trackingCode())
                 .orElseThrow(
-                        () -> new RuntimeException("Loan not found")
+                        () -> new ResourceNotFoundException("Loan not found")
                 );
 
 
         if (loan.getReturnDate() != null) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Book already returned"
             );
         }
@@ -151,17 +156,18 @@ public class LoanServiceImpl implements LoanService {
 
 
     @Override
+    @Transactional
     public LoanResponse renewLoan(RenewRequest request) {
         LoanTransaction oldLoan = loanRepository
                 .findByTrackingCode(request.trackingCode())
                 .orElseThrow(
-                        () -> new RuntimeException("Loan not found")
+                        () -> new ResourceNotFoundException("Loan not found")
                 );
 
 
         if (oldLoan.getReturnDate() != null) {
 
-            throw new RuntimeException(
+            throw new BusinessException(
                     "Book already returned"
             );
         }
@@ -313,7 +319,7 @@ public class LoanServiceImpl implements LoanService {
                     LocalDateTime.now()
             );
 
-
+            fine.setPaidAmount(BigDecimal.ZERO);
             fineRepository.save(fine);
         }
     }

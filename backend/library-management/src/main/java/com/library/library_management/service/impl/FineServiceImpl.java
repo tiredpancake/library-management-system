@@ -3,8 +3,10 @@ package com.library.library_management.service.impl;
 import com.library.library_management.dto.fine.FineResponse;
 import com.library.library_management.entity.Fine;
 import com.library.library_management.entity.Enums;
+import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.FineRepository;
 import com.library.library_management.service.FineService;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +28,7 @@ public class FineServiceImpl implements FineService {
         Fine fine = fineRepository
                 .findByLoanTransactionId(loanId)
                 .orElseThrow(
-                        () -> new RuntimeException("Fine not found")
+                        () -> new ResourceNotFoundException("Fine not found")
                 );
 
 
@@ -36,12 +38,13 @@ public class FineServiceImpl implements FineService {
 
 
     @Override
+    @Transactional
     public FineResponse payFine(Long fineId) {
 
         Fine fine = fineRepository
                 .findById(fineId)
                 .orElseThrow(
-                        () -> new RuntimeException("Fine not found")
+                        () -> new ResourceNotFoundException("Fine not found")
                 );
 
 
