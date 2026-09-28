@@ -17,6 +17,7 @@ import com.library.library_management.exception.DuplicateResourceException;
 import com.library.library_management.entity.Member;
 import com.library.library_management.entity.Enums;
 import java.time.LocalDateTime;
+import com.library.library_management.security.SecurityUtils;
 
 
 @Service
@@ -231,9 +232,11 @@ public class MemberServiceImpl implements MemberService {
     private AppUser getCurrentUser() {
 
         return appUserRepository
-                .findByUsername("admin")
+                .findByUsername(
+                        SecurityUtils.getCurrentUsername()
+                )
                 .orElseThrow(
-                        () -> new ResourceNotFoundException("Admin user not found")
+                        () -> new RuntimeException("User not found")
                 );
     }
 

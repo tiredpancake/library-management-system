@@ -3,6 +3,7 @@ package com.library.library_management.exception;
 import com.library.library_management.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,6 +83,22 @@ public class GlobalExceptionHandler {
                         new ErrorResponse(
                                 ex.getMessage(),
                                 400,
+                                LocalDateTime.now()
+                        )
+                );
+    }
+
+    @ExceptionHandler(
+            ObjectOptimisticLockingFailureException.class
+    )
+    public ResponseEntity<ErrorResponse> handleOptimisticLock(){
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(
+                        new ErrorResponse(
+                                "Book was modified by another user. Please try again.",
+                                409,
                                 LocalDateTime.now()
                         )
                 );

@@ -32,6 +32,7 @@ public class Enums {
 
     public enum FineStatus {
         UNPAID,
+        PARTIALLY_PAID,
         PAID
     }
 }

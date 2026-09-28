@@ -1,9 +1,11 @@
 package com.library.library_management.controller;
 
 import com.library.library_management.dto.fine.FineResponse;
+import com.library.library_management.dto.fine.PayFineRequest;
 import com.library.library_management.service.FineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/fines")
@@ -12,7 +14,6 @@ public class FineController {
 
 
     private final FineService fineService;
-
 
 
     @GetMapping("/loan/{loanId}")
@@ -27,10 +28,17 @@ public class FineController {
 
     @PutMapping("/{fineId}/pay")
     public FineResponse payFine(
-            @PathVariable Long fineId
+
+            @PathVariable Long fineId,
+
+            @RequestBody PayFineRequest request
+
     ) {
 
-        return fineService.payFine(fineId);
+        return fineService.payFine(
+                fineId,
+                request
+        );
     }
 
 }

@@ -1,18 +1,22 @@
 package com.library.library_management.service.impl;
 
+import com.library.library_management.config.LibraryProperties;
 import com.library.library_management.dto.loan.*;
 import com.library.library_management.exception.BusinessException;
 import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.*;
 import com.library.library_management.service.LoanService;
+import com.library.library_management.service.validation.LoanValidator;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.library.library_management.entity.*;
 import com.library.library_management.entity.Enums;
+import com.library.library_management.security.SecurityUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,8 @@ public class LoanServiceImpl implements LoanService {
     private final BookRepository bookRepository;
     private final AppUserRepository appUserRepository;
     private final FineRepository fineRepository;
+    private final LoanValidator loanValidator;
+    private final LibraryProperties properties;
 
 
 
@@ -43,19 +49,13 @@ public class LoanServiceImpl implements LoanService {
                         () -> new ResourceNotFoundException("Book not found")
                 );
 
-        if (member.getStatus() != Enums.MemberStatus.ACTIVE) {
 
-            throw new BusinessException(
-                    "Member is not active"
-            );
-        }
 
-        if (book.getAvailableCopies() <= 0) {
-
-            throw new BusinessException(
-                    "Book is not available"
-            );
-        }
+        loanValidator.validateMember(member);
+        loanValidator.validateLoanLimit(member);
+        loanValidator.validateOverdue(member);
+        loanValidator.validateUnpaidFine(member);
+        loanValidator.validateBook(book);
 
 
         LoanTransaction loan = new LoanTransaction();
@@ -91,7 +91,10 @@ public class LoanServiceImpl implements LoanService {
 
 
         loan.setDueDate(
-                LocalDateTime.now().plusDays(14)
+                LocalDateTime.now()
+                        .plusDays(
+                                properties.getLoanPeriodDays()
+                        )
         );
 
 
@@ -114,55 +117,15 @@ public class LoanServiceImpl implements LoanService {
     @Override
     @Transactional
     public LoanResponse returnBook(ReturnRequest request) {
-        LoanTransaction loan = loanRepository
-                .findByTrackingCode(request.trackingCode())
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Loan not found")
-                );
 
-
-        if (loan.getReturnDate() != null) {
-
-            throw new BusinessException(
-                    "Book already returned"
-            );
-        }
-
-        loan.setReturnDate(
-                LocalDateTime.now()
-        );
-
-        loan.setStatus(
-                Enums.LoanStatus.SUCCESS
-        );
-
-        Book book = loan.getBook();
-
-        book.setAvailableCopies(
-                book.getAvailableCopies() + 1
-        );
-
-        bookRepository.save(book);
-
-
-        LoanTransaction savedLoan =
-                loanRepository.save(loan);
-        createFineIfNeeded(savedLoan);
-
-
-
-        return mapToResponse(savedLoan);    }
-
-
-
-    @Override
-    @Transactional
-    public LoanResponse renewLoan(RenewRequest request) {
-        LoanTransaction oldLoan = loanRepository
-                .findByTrackingCode(request.trackingCode())
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Loan not found")
-                );
+        LoanTransaction oldLoan =
+                loanRepository
+                        .findByTrackingCode(request.trackingCode())
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException(
+                                        "Loan not found"
+                                )
+                        );
 
 
         if (oldLoan.getReturnDate() != null) {
@@ -173,80 +136,195 @@ public class LoanServiceImpl implements LoanService {
         }
 
 
-        LoanTransaction newLoan = new LoanTransaction();
+        LoanTransaction returnTransaction =
+                new LoanTransaction();
 
 
-        newLoan.setMember(
+        returnTransaction.setMember(
                 oldLoan.getMember()
         );
 
 
-        newLoan.setBook(
+        returnTransaction.setBook(
                 oldLoan.getBook()
         );
 
 
-        newLoan.setCreatedBy(
+        returnTransaction.setCreatedBy(
                 getCurrentUser()
         );
 
 
-        newLoan.setParentTransaction(
-                oldLoan
+        returnTransaction.setType(
+                Enums.LoanType.RETURN
         );
 
 
-        newLoan.setType(
-                Enums.LoanType.RENEW
-        );
-
-
-        newLoan.setStatus(
+        returnTransaction.setStatus(
                 Enums.LoanStatus.SUCCESS
         );
 
 
-        newLoan.setTrackingCode(
+        returnTransaction.setParentTransaction(
+                oldLoan
+        );
+
+
+        returnTransaction.setTrackingCode(
                 generateTrackingCode()
         );
 
 
-        newLoan.setRequestDate(
+        returnTransaction.setRequestDate(
                 LocalDateTime.now()
         );
 
 
-        newLoan.setDueDate(
-                LocalDateTime.now()
-                        .plusDays(14)
+        returnTransaction.setDueDate(
+                oldLoan.getDueDate()
         );
 
 
-        newLoan.setRenewCount(
+        returnTransaction.setReturnDate(
+                LocalDateTime.now()
+        );
+
+
+        returnTransaction.setRenewCount(
+                oldLoan.getRenewCount()
+        );
+
+
+        Book book = oldLoan.getBook();
+
+        book.setAvailableCopies(
+                book.getAvailableCopies() + 1
+        );
+
+        bookRepository.save(book);
+
+
+
+        LoanTransaction savedReturn =
+                loanRepository.save(returnTransaction);
+
+
+
+        createFineIfNeeded(
+                savedReturn
+        );
+
+
+        return mapToResponse(savedReturn);
+    }
+
+
+    @Override
+    @Transactional
+    public LoanResponse renewLoan(RenewRequest request) {
+
+        LoanTransaction oldLoan =
+                loanRepository
+                        .findByTrackingCode(request.trackingCode())
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Loan not found"
+                                )
+                        );
+
+
+        if (oldLoan.getReturnDate() != null) {
+
+            throw new RuntimeException(
+                    "Book already returned"
+            );
+        }
+
+
+        if (oldLoan.getRenewCount() >= 2) {
+
+            throw new RuntimeException(
+                    "Maximum renew limit reached"
+            );
+        }
+
+
+        LoanTransaction renew = new LoanTransaction();
+
+
+        renew.setMember(
+                oldLoan.getMember()
+        );
+
+
+        renew.setBook(
+                oldLoan.getBook()
+        );
+
+
+        renew.setCreatedBy(
+                getCurrentUser()
+        );
+
+
+        renew.setType(
+                Enums.LoanType.RENEW
+        );
+
+
+        renew.setStatus(
+                Enums.LoanStatus.SUCCESS
+        );
+
+
+        renew.setParentTransaction(
+                oldLoan
+        );
+
+
+        renew.setRenewCount(
                 oldLoan.getRenewCount() + 1
         );
 
 
-        LoanTransaction savedLoan =
-                loanRepository.save(newLoan);
+        renew.setRequestDate(
+                LocalDateTime.now()
+        );
 
 
-        return mapToResponse(savedLoan);    }
+        renew.setDueDate(
+                oldLoan.getDueDate()
+                        .plusDays(14)
+        );
+
+
+        renew.setTrackingCode(
+                generateTrackingCode()
+        );
+
+
+        LoanTransaction saved =
+                loanRepository.save(renew);
+
+
+        return mapToResponse(saved);
+    }
 
     private String generateTrackingCode() {
 
-        return String.valueOf(
-                System.currentTimeMillis()
-        );
+        return UUID.randomUUID()
+                .toString();
 
     }
 
     private AppUser getCurrentUser() {
 
         return appUserRepository
-                .findByUsername("admin")
+                .findByUsername(
+                        SecurityUtils.getCurrentUsername()
+                )
                 .orElseThrow(
-                        () -> new RuntimeException("Admin user not found")
+                        () -> new RuntimeException("User not found")
                 );
     }
 
@@ -299,8 +377,8 @@ public class LoanServiceImpl implements LoanService {
             BigDecimal amount =
                     BigDecimal.valueOf(
                             Math.min(
-                                    lateDays * 5000L,
-                                    20000L
+                                    lateDays * properties.getFinePerDay(),
+                                    properties.getMaxFine()
                             )
                     );
 

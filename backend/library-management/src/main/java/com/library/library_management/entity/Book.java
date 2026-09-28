@@ -60,4 +60,7 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Enums.BookStatus status;
+
+    @Version
+    private Long version;
 }

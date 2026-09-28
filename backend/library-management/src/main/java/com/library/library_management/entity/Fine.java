@@ -23,7 +23,8 @@ public class Fine {
     @JoinColumn(name = "loan_transaction_id", nullable = false, unique = true)
     private LoanTransaction loanTransaction;
 
-    private BigDecimal paidAmount;
+    @Column(nullable = false)
+    private BigDecimal paidAmount = BigDecimal.ZERO;
 
     @Column(nullable = false)
     private BigDecimal amount;
