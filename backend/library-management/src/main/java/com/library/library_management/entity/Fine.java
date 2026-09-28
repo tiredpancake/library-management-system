@@ -3,6 +3,7 @@ package com.library.library_management.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,21 +20,12 @@ public class Fine {
 
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "loan_transaction_id",
-            nullable = false,
-            unique = true
-    )
+    @JoinColumn(name = "loan_transaction_id", nullable = false, unique = true)
     private LoanTransaction loanTransaction;
 
 
     @Column(nullable = false)
-    private Double amount;
-
-
-    @Column(name = "paid_amount", nullable = false)
-    private Double paidAmount;
-
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

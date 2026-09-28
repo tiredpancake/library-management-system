@@ -58,13 +58,13 @@ public class LoanTransaction {
 
 
     @Column(nullable = false)
-    private Integer renewCount = 0;
+    private Integer renewCount ;
 
 
     private String errorMessage;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "related_loan_id")
-    private LoanTransaction relatedLoan;
+    @JoinColumn(name = "parent_transaction_id")
+    private LoanTransaction parentTransaction;
 }
