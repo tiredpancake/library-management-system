@@ -1,5 +1,6 @@
 package com.library.library_management.service.impl;
 
+import com.library.library_management.exception.ResourceNotFoundException;
 import com.library.library_management.repository.AppUserRepository;
 import com.library.library_management.repository.BookRepository;
 import com.library.library_management.service.BookService;
@@ -83,7 +84,7 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository
                 .findByIsbn(isbn)
                 .orElseThrow(
-                        () -> new RuntimeException("Book not found")
+                        () -> new ResourceNotFoundException("Book not found")
                 );
 
         return mapToResponse(book);
