@@ -18,6 +18,8 @@ import com.library.library_management.exception.DuplicateResourceException;
 import com.library.library_management.entity.Member;
 import com.library.library_management.entity.Enums;
 import java.time.LocalDateTime;
+import java.util.List;
+
 import com.library.library_management.security.SecurityUtils;
 
 
@@ -84,7 +86,16 @@ public class MemberServiceImpl implements MemberService {
 
         return mapToResponse(member);
     }
+    @Override
+    public List<MemberResponse> getAllMembers(){
 
+        return memberRepository
+                .findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+
+    }
 
     @Override
     public MemberResponse getByNationalCode(String nationalCode) {

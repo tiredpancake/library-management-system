@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/members")
 @RequiredArgsConstructor
@@ -54,5 +56,12 @@ public class MemberController {
     ) {
 
         return memberService.updateMember(id, request);
+    }
+
+    @GetMapping
+    public List<MemberResponse> getAllMembers(){
+
+        return memberService.getAllMembers();
+
     }
 }

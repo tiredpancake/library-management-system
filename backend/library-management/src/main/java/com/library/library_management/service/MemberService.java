@@ -4,6 +4,8 @@ import com.library.library_management.dto.member.CreateMemberRequest;
 import com.library.library_management.dto.member.MemberResponse;
 import com.library.library_management.dto.member.UpdateMemberRequest;
 
+import java.util.List;
+
 public interface MemberService {
 
     MemberResponse createMember(CreateMemberRequest request);
@@ -16,4 +18,5 @@ public interface MemberService {
             Long id,
             UpdateMemberRequest request
     );
+    List<MemberResponse> getAllMembers();
 }

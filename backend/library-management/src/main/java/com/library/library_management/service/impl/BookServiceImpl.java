@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.library.library_management.security.SecurityUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -92,6 +93,34 @@ public class BookServiceImpl implements BookService {
                 );
 
         return mapToResponse(book);
+    }
+
+    @Override
+    public List<BookResponse> getAllBooks(){
+
+        return bookRepository
+                .findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+
+    }
+
+    @Override
+    @Transactional
+    public void deleteBook(Long id){
+
+        Book book = bookRepository
+                .findById(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Book not found"
+                        )
+                );
+
+
+        bookRepository.delete(book);
+
     }
 
 

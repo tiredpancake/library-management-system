@@ -4,6 +4,8 @@ import com.library.library_management.dto.book.BookResponse;
 import com.library.library_management.dto.book.CreateBookRequest;
 import com.library.library_management.dto.book.UpdateBookRequest;
 
+import java.util.List;
+
 public interface BookService {
 
     BookResponse createBook(CreateBookRequest request);
@@ -13,5 +15,6 @@ public interface BookService {
     BookResponse getByBookCode(String bookCode);
 
     BookResponse updateBook(Long id, UpdateBookRequest request);
-
+    List<BookResponse> getAllBooks();
+    void deleteBook(Long id);
 }

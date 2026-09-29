@@ -27,4 +27,6 @@ public interface LoanTransactionRepository
             LocalDateTime date
     );
 
+    long countByReturnDateIsNull();
+
 }

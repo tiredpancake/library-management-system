@@ -174,5 +174,15 @@ public class FineServiceImpl implements FineService {
                 fine.getPaidAt()
         );
     }
+    @Override
+    public List<FineResponse> getAllFines(){
+
+        return fineRepository
+                .findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+
+    }
 
 }

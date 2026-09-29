@@ -27,5 +27,7 @@ public interface FineRepository extends JpaRepository<Fine, Long> {
             Long memberId,
             Enums.FineStatus status
     );
-
+    long countByStatusNot(
+            Enums.FineStatus status
+    );
 }

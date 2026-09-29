@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
@@ -56,5 +58,18 @@ public class BookController {
 
         return bookService.updateBook(id, request);
     }
+    @GetMapping
+    public List<BookResponse> getAllBooks(){
 
+        return bookService.getAllBooks();
+
+    }
+    @DeleteMapping("/{id}")
+    public void deleteBook(
+            @PathVariable Long id
+    ){
+
+        bookService.deleteBook(id);
+
+    }
 }
