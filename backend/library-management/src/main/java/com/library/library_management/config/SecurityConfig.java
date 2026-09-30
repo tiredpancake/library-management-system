@@ -2,22 +2,32 @@ package com.library.library_management.config;
 
 
 import com.library.library_management.service.security.AppUserDetailsService;
+
 import lombok.RequiredArgsConstructor;
+
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
+
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -36,6 +46,9 @@ public class SecurityConfig {
     private final AppUserDetailsService appUserDetailsService;
 
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -44,30 +57,50 @@ public class SecurityConfig {
 
 
         http
+
                 .csrf(csrf -> csrf.disable())
 
                 .cors(Customizer.withDefaults())
+
 
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(
                                 "/api/auth/login",
+
+                                "/swagger-ui.html",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+
+                                "/v3/api-docs.yaml",
+
+                                "/webjars/**"
                         )
                         .permitAll()
 
                         .anyRequest()
                         .authenticated()
+
                 )
 
 
-                .httpBasic(Customizer.withDefaults());
+                .authenticationProvider(
+                        authenticationProvider()
+                )
+
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
 
         return http.build();
 
     }
+
 
 
 
@@ -92,10 +125,26 @@ public class SecurityConfig {
 
 
 
+
+
     @Bean
     public PasswordEncoder passwordEncoder(){
 
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
+
+    }
+
+
+
+
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration
+    ) throws Exception {
+
+
+        return configuration.getAuthenticationManager();
 
     }
 
@@ -151,12 +200,6 @@ public class SecurityConfig {
         return source;
 
     }
-    @Bean
-    public AuthenticationManager authenticationManager(
-            org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration configuration
-    ) throws Exception {
 
-        return configuration.getAuthenticationManager();
 
-    }
 }
