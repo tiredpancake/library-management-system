@@ -6,6 +6,5 @@ public record RenewRequest(
 
         @NotBlank
         String trackingCode
-
 ) {
 }

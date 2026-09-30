@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 public record PayFineRequest(
 
         String membershipNumber,
-
         @DecimalMin(value = "0.01")
         BigDecimal amount
 

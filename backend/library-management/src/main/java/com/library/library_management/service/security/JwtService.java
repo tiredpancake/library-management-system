@@ -15,110 +15,57 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 
-
 @Service
 public class JwtService {
 
 
     private final SecretKey key;
-
     private final long expiration;
-
 
 
     public JwtService(
 
-            @Value("${security.jwt.secret}")
-            String secret,
+            @Value("${security.jwt.secret}") String secret,
+            @Value("${security.jwt.expiration}") long expiration
 
-            @Value("${security.jwt.expiration}")
-            long expiration
+    ) {
 
-    ){
-
-        this.key = Keys.hmacShaKeyFor(
-                secret.getBytes(StandardCharsets.UTF_8)
-        );
-
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration;
 
     }
 
 
-
-    public String generateToken(UserDetails userDetails){
-
-
+    public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
 
                 .subject(userDetails.getUsername())
-
                 .issuedAt(new Date())
-
-                .expiration(
-                        new Date(
-                                System.currentTimeMillis()
-                                        + expiration
-                        )
-                )
-
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key)
-
                 .compact();
-
     }
 
 
+    public String extractUsername(String token) {
 
-
-    public String extractUsername(String token){
-
-        return extractClaims(token)
-                .getSubject();
+        return extractClaims(token).getSubject();
 
     }
 
+    public boolean isTokenValid(String token, UserDetails userDetails) {
 
-
-
-    public boolean isTokenValid(
-            String token,
-            UserDetails userDetails
-    ){
-
-        String username =
-                extractUsername(token);
-
-
-        return username.equals(
-                userDetails.getUsername()
-        )
-                &&
-                !extractClaims(token)
-                        .getExpiration()
-                        .before(
-                                new Date()
-                        );
+        String username = extractUsername(token);
+        return username.equals(userDetails.getUsername()) && !extractClaims(token).getExpiration().before(new Date());
 
     }
 
-
-
-
-    private Claims extractClaims(String token){
-
+    private Claims extractClaims(String token) {
 
         return Jwts.parser()
-
                 .verifyWith(key)
-
                 .build()
-
                 .parseSignedClaims(token)
-
                 .getPayload();
-
     }
-
-
 }

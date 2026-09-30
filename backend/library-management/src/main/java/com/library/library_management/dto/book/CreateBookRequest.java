@@ -9,25 +9,18 @@ public record CreateBookRequest(
 
         @NotBlank
         String isbn,
-
         @NotBlank
         String title,
-
         @NotBlank
         String author,
-
         @NotBlank
         String category,
-
         @NotBlank
         String publisher,
-
         @NotNull
         Integer publishYear,
-
         @NotNull
         Integer totalCopies,
-
         BigDecimal price
 
 ) {

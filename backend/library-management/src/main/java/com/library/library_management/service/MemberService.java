@@ -14,9 +14,7 @@ public interface MemberService {
 
     MemberResponse getByNationalCode(String nationalCode);
 
-    MemberResponse updateMember(
-            Long id,
-            UpdateMemberRequest request
-    );
+    MemberResponse updateMember(Long id, UpdateMemberRequest request);
+
     List<MemberResponse> getAllMembers();
 }

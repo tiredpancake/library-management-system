@@ -7,10 +7,7 @@ public class SecurityUtils {
 
     public static String getCurrentUsername() {
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return authentication.getName();
     }

@@ -13,45 +13,28 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MemberHistoryServiceImpl
-        implements MemberHistoryService {
+public class MemberHistoryServiceImpl implements MemberHistoryService {
 
 
     private final MemberHistoryRepository memberHistoryRepository;
 
-
-
     @Override
     public List<MemberHistoryResponse> getMemberHistory(Long memberId) {
 
-
-        return memberHistoryRepository
-                .findByMemberId(memberId)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+        return memberHistoryRepository.findByMemberId(memberId).stream().map(this::mapToResponse).toList();
 
     }
 
 
-
-    private MemberHistoryResponse mapToResponse(
-            MemberHistory history
-    ) {
+    private MemberHistoryResponse mapToResponse(MemberHistory history) {
 
         return new MemberHistoryResponse(
 
                 history.getId(),
-
                 history.getFieldName(),
-
                 history.getOldValue(),
-
                 history.getNewValue(),
-
-                history.getChangedBy()
-                        .getUsername(),
-
+                history.getChangedBy().getUsername(),
                 history.getChangedAt()
 
         );

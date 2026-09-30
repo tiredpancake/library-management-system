@@ -3,7 +3,10 @@ package com.library.library_management.service.security;
 import com.library.library_management.entity.AppUser;
 import com.library.library_management.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.*;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 
@@ -16,24 +19,11 @@ public class AppUserDetailsService implements UserDetailsService {
 
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
 
-        AppUser user = appUserRepository
-                .findByUsername(username)
-                .orElseThrow(
-                        () -> new UsernameNotFoundException(
-                                "User not found"
-                        )
-                );
+        AppUser user = appUserRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-
-
-        return User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .roles("USER")
-                .build();
+        return User.builder().username(user.getUsername()).password(user.getPassword()).roles("USER").build();
     }
 }

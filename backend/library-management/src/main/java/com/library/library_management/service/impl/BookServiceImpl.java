@@ -1,21 +1,21 @@
 package com.library.library_management.service.impl;
 
-import com.library.library_management.exception.BusinessException;
-import com.library.library_management.exception.ResourceNotFoundException;
-import com.library.library_management.repository.AppUserRepository;
-import com.library.library_management.repository.BookRepository;
-import com.library.library_management.service.BookService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import com.library.library_management.dto.book.BookResponse;
 import com.library.library_management.dto.book.CreateBookRequest;
 import com.library.library_management.dto.book.UpdateBookRequest;
-import com.library.library_management.entity.Book;
 import com.library.library_management.entity.AppUser;
+import com.library.library_management.entity.Book;
 import com.library.library_management.entity.Enums;
+import com.library.library_management.exception.BusinessException;
 import com.library.library_management.exception.DuplicateResourceException;
-import org.springframework.transaction.annotation.Transactional;
+import com.library.library_management.exception.ResourceNotFoundException;
+import com.library.library_management.repository.AppUserRepository;
+import com.library.library_management.repository.BookRepository;
 import com.library.library_management.security.SecurityUtils;
+import com.library.library_management.service.BookService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,25 +24,18 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
 
-
     private final BookRepository bookRepository;
     private final AppUserRepository appUserRepository;
-
 
     @Override
     @Transactional
     public BookResponse createBook(CreateBookRequest request) {
         if (bookRepository.existsByIsbn(request.isbn())) {
 
-            throw new DuplicateResourceException(
-                    "Book with this ISBN already exists"
-            );
+            throw new DuplicateResourceException("Book with this ISBN already exists");
         }
 
-
         Book book = new Book();
-
-
         book.setIsbn(request.isbn());
         book.setTitle(request.title());
         book.setAuthor(request.author());
@@ -51,130 +44,74 @@ public class BookServiceImpl implements BookService {
         book.setPublishYear(request.publishYear());
         book.setTotalCopies(request.totalCopies());
         book.setPrice(request.price());
-
-
-        book.setBookCode(
-                generateBookCode()
-        );
-
-
-        book.setAvailableCopies(
-                request.totalCopies()
-        );
-
-
-        book.setStatus(
-                Enums.BookStatus.ACTIVE
-        );
-
-
-        book.setCreatedAt(
-                LocalDateTime.now()
-        );
-
-
-        book.setCreatedBy(
-                getCurrentUser()
-        );
-
-
+        book.setBookCode(generateBookCode());
+        book.setAvailableCopies(request.totalCopies());
+        book.setStatus(Enums.BookStatus.ACTIVE);
+        book.setCreatedAt(LocalDateTime.now());
+        book.setCreatedBy(getCurrentUser());
         Book savedBook = bookRepository.save(book);
-
-
-        return mapToResponse(savedBook);    }
+        return mapToResponse(savedBook);
+    }
 
 
     @Override
     public BookResponse getByIsbn(String isbn) {
-        Book book = bookRepository
-                .findByIsbn(isbn)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Book not found")
-                );
+        Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
         return mapToResponse(book);
     }
 
     @Override
-    public List<BookResponse> getAllBooks(){
+    public List<BookResponse> getAllBooks() {
 
-        return bookRepository
-                .findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-
+        return bookRepository.findAll().stream().map(this::mapToResponse).toList();
     }
 
     @Override
     @Transactional
-    public void deleteBook(Long id){
+    public void deleteBook(Long id) {
 
-        Book book = bookRepository
-                .findById(id)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException(
-                                "Book not found"
-                        )
-                );
-
-
+        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
         bookRepository.delete(book);
 
     }
 
-
     @Override
     public BookResponse getByBookCode(String bookCode) {
-        Book book = bookRepository
-                .findByBookCode(bookCode)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Book not found")
-                );
+        Book book = bookRepository.findByBookCode(bookCode).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
         return mapToResponse(book);
     }
-
 
     @Override
     @Transactional
     public BookResponse updateBook(Long id, UpdateBookRequest request) {
 
-        Book book = bookRepository.findById(id)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Book not found")
-                );
-
+        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
         if (request.title() != null) {
             book.setTitle(request.title());
         }
 
-
         if (request.author() != null) {
             book.setAuthor(request.author());
         }
-
 
         if (request.category() != null) {
             book.setCategory(request.category());
         }
 
-
         if (request.publisher() != null) {
             book.setPublisher(request.publisher());
         }
-
 
         if (request.publishYear() != null) {
             book.setPublishYear(request.publishYear());
         }
 
-
         if (request.price() != null) {
             book.setPrice(request.price());
         }
-
 
         if (request.status() != null) {
             book.setStatus(request.status());
@@ -183,95 +120,52 @@ public class BookServiceImpl implements BookService {
         if (request.totalCopies() != null) {
 
             int oldTotalCopies = book.getTotalCopies();
-
             int newTotalCopies = request.totalCopies();
 
-
             if (newTotalCopies < 0) {
-                throw new ResourceNotFoundException(
-                        "Total copies cannot be negative"
-                );
+                throw new ResourceNotFoundException("Total copies cannot be negative");
             }
 
-
             int difference = newTotalCopies - oldTotalCopies;
-
-
-            int newAvailableCopies =
-                    book.getAvailableCopies() + difference;
-
+            int newAvailableCopies = book.getAvailableCopies() + difference;
 
             if (newAvailableCopies < 0) {
 
-                throw new ResourceNotFoundException(
-                        "Cannot reduce copies because some books are borrowed"
-                );
+                throw new ResourceNotFoundException("Cannot reduce copies because some books are borrowed");
             }
 
-
             book.setTotalCopies(newTotalCopies);
-
             book.setAvailableCopies(newAvailableCopies);
         }
 
-
-
         book.setUpdatedAt(LocalDateTime.now());
-
-
         Book savedBook = bookRepository.save(book);
-
-
         return mapToResponse(savedBook);
     }
+
     private String generateBookCode() {
 
         String code;
 
         do {
 
-            code = String.valueOf(
-                    (long)(Math.random() * 90000000000000L
-                            + 10000000000000L)
-            );
+            code = String.valueOf((long) (Math.random() * 90000000000000L + 10000000000000L));
 
-        } while (
-                bookRepository.existsByBookCode(code)
-        );
-
+        } while (bookRepository.existsByBookCode(code));
 
         return code;
     }
 
     private AppUser getCurrentUser() {
 
-        return appUserRepository
-                .findByUsername(
-                        SecurityUtils.getCurrentUsername()
-                )
-                .orElseThrow(
-                        () -> new BusinessException("User not found")
-                );
+        return appUserRepository.findByUsername(SecurityUtils.getCurrentUsername()).orElseThrow(() -> new BusinessException("User not found"));
     }
 
     private BookResponse mapToResponse(Book book) {
 
         return new BookResponse(
 
-                book.getId(),
-                book.getBookCode(),
-                book.getIsbn(),
-                book.getTitle(),
-                book.getAuthor(),
-                book.getCategory(),
-                book.getPublisher(),
-                book.getPublishYear(),
-                book.getTotalCopies(),
-                book.getAvailableCopies(),
-                book.getPrice(),
-                book.getStatus(),
-                book.getCreatedAt(),
-                book.getUpdatedAt()
+                book.getId(), book.getBookCode(), book.getIsbn(), book.getTitle(), book.getAuthor(), book.getCategory(), book.getPublisher(), book.getPublishYear(), book.getTotalCopies(), book.getAvailableCopies(), book.getPrice(), book.getStatus(), book.getCreatedAt(), book.getUpdatedAt()
 
         );
     }

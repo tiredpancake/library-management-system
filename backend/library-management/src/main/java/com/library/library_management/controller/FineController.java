@@ -18,29 +18,21 @@ public class FineController {
 
     private final FineService fineService;
 
-
     @GetMapping("/loan/{loanId}")
-    public FineResponse getFineByLoan(
-            @PathVariable Long loanId
-    ) {
+    public FineResponse getFineByLoan(@PathVariable Long loanId) {
 
         return fineService.getFineByLoan(loanId);
     }
 
-
-
     @PutMapping("/pay")
-    public FineResponse payFine(
-            @Valid @RequestBody PayFineRequest request
-    ) {
+    public FineResponse payFine(@Valid @RequestBody PayFineRequest request) {
 
         return fineService.payFine(request);
-
     }
+
     @GetMapping
-    public List<FineResponse> getAllFines(){
+    public List<FineResponse> getAllFines() {
 
         return fineService.getAllFines();
-
     }
 }

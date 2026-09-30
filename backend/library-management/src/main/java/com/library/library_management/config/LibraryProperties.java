@@ -13,18 +13,11 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "library")
 public class LibraryProperties {
 
-
     private int maxActiveLoans;
-
     private int maxUnpaidFine;
-
     private int maxRenewCount;
-
-
     private int loanPeriodDays;
-
     private long finePerDay;
-
     private long maxFine;
 
 }

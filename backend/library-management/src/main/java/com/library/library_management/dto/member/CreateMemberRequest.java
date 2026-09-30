@@ -10,22 +10,16 @@ public record CreateMemberRequest(
 
         @NotBlank
         String fullName,
-
         @NotBlank
         String nationalCode,
-
         @NotNull
         LocalDate birthDate,
-
         @NotNull
         MembershipType membershipType,
-
         @NotBlank
         String phone,
-
         @NotBlank
         String address,
-
         @NotBlank
         String postalCode
 

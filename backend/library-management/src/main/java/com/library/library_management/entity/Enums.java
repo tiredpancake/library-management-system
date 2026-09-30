@@ -3,36 +3,26 @@ package com.library.library_management.entity;
 public class Enums {
 
     public enum MemberStatus {
-        ACTIVE,
-        INACTIVE,
-        BLOCKED
+        ACTIVE, INACTIVE, BLOCKED
     }
 
     public enum BookStatus {
-        ACTIVE,
-        INACTIVE,
-        DELETED
+        ACTIVE, INACTIVE, DELETED
     }
+
     public enum LoanType {
-        BORROW,
-        RETURN,
-        RENEW
+        BORROW, RETURN, RENEW
     }
 
     public enum MembershipType {
-        INDIVIDUAL,
-        ORGANIZATIONAL
+        INDIVIDUAL, ORGANIZATIONAL
     }
 
     public enum LoanStatus {
-        PENDING,
-        SUCCESS,
-        FAILED
+        PENDING, SUCCESS, FAILED
     }
 
     public enum FineStatus {
-        UNPAID,
-        PARTIALLY_PAID,
-        PAID
+        UNPAID, PARTIALLY_PAID, PAID
     }
 }

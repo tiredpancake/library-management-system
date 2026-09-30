@@ -15,53 +15,35 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MemberController {
 
-
     private final MemberService memberService;
 
-
     @PostMapping
-    public MemberResponse createMember(
-            @RequestBody @Valid CreateMemberRequest request
-    ) {
+    public MemberResponse createMember(@RequestBody @Valid CreateMemberRequest request) {
 
         return memberService.createMember(request);
     }
 
-
-
     @GetMapping("/membership/{number}")
-    public MemberResponse getByMembershipNumber(
-            @PathVariable String number
-    ) {
+    public MemberResponse getByMembershipNumber(@PathVariable String number) {
 
         return memberService.getByMembershipNumber(number);
     }
 
-
-
     @GetMapping("/national-code/{code}")
-    public MemberResponse getByNationalCode(
-            @PathVariable String code
-    ) {
+    public MemberResponse getByNationalCode(@PathVariable String code) {
 
         return memberService.getByNationalCode(code);
     }
 
-
-
     @PutMapping("/{id}")
-    public MemberResponse updateMember(
-            @PathVariable Long id,
-            @RequestBody @Valid UpdateMemberRequest request
-    ) {
+    public MemberResponse updateMember(@PathVariable Long id, @RequestBody @Valid UpdateMemberRequest request) {
 
         return memberService.updateMember(id, request);
     }
 
     @GetMapping
-    public List<MemberResponse> getAllMembers(){
+    public List<MemberResponse> getAllMembers() {
 
         return memberService.getAllMembers();
-
     }
 }

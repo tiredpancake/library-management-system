@@ -9,9 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface LoanTransactionRepository
-        extends JpaRepository<LoanTransaction, Long>,
-        JpaSpecificationExecutor<LoanTransaction> {
+public interface LoanTransactionRepository extends JpaRepository<LoanTransaction, Long>, JpaSpecificationExecutor<LoanTransaction> {
 
 
     Optional<LoanTransaction> findByTrackingCode(String trackingCode);
@@ -23,12 +21,7 @@ public interface LoanTransactionRepository
     long countByMemberIdAndReturnDateIsNull(Long memberId);
 
 
-    boolean existsByMemberIdAndReturnDateIsNullAndDueDateBefore(
-            Long memberId,
-            LocalDateTime date
-    );
+    boolean existsByMemberIdAndReturnDateIsNullAndDueDateBefore(Long memberId, LocalDateTime date);
 
-    long countByStatusAndReturnDateIsNull(
-            Enums.LoanStatus status
-    );
+    long countByStatusAndReturnDateIsNull(Enums.LoanStatus status);
 }

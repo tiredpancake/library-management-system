@@ -19,15 +19,10 @@ public class LoanSpecification {
         return (root, query, cb) ->
 
                 membershipNumber == null
-                        ? null
-                        :
-                        cb.equal(
-                                root.get("member")
-                                        .get("membershipNumber"),
-                                membershipNumber
-                        );
-    }
-
+                        ? null :
+                        cb.equal(root.get("member")
+                                        .get("membershipNumber"), membershipNumber
+                        );}
 
 
     public static Specification<LoanTransaction> hasBook(
@@ -36,16 +31,12 @@ public class LoanSpecification {
 
         return (root, query, cb) ->
 
-                bookCode == null
-                        ? null
-                        :
-                        cb.equal(
+                bookCode == null ? null
+                        : cb.equal(
                                 root.get("book")
                                         .get("bookCode"),
                                 bookCode
-                        );
-    }
-
+                        );}
 
 
     public static Specification<LoanTransaction> hasType(
@@ -54,15 +45,12 @@ public class LoanSpecification {
 
         return (root, query, cb) ->
 
-                type == null
-                        ? null
-                        :
-                        cb.equal(
+                type == null ? null
+                        : cb.equal(
                                 root.get("type"),
                                 type
                         );
     }
-
 
 
     public static Specification<LoanTransaction> hasStatus(
@@ -72,14 +60,11 @@ public class LoanSpecification {
         return (root, query, cb) ->
 
                 status == null
-                        ? null
-                        :
-                        cb.equal(
+                        ? null : cb.equal(
                                 root.get("status"),
                                 status
                         );
     }
-
 
 
     public static Specification<LoanTransaction> dateFrom(
@@ -88,15 +73,12 @@ public class LoanSpecification {
 
         return (root, query, cb) ->
 
-                from == null
-                        ? null
-                        :
-                        cb.greaterThanOrEqualTo(
+                from == null ? null
+                        : cb.greaterThanOrEqualTo(
                                 root.get("requestDate"),
                                 from
                         );
     }
-
 
 
     public static Specification<LoanTransaction> dateTo(
@@ -106,12 +88,10 @@ public class LoanSpecification {
         return (root, query, cb) ->
 
                 to == null
-                        ? null
-                        :
+                        ? null :
                         cb.lessThanOrEqualTo(
                                 root.get("requestDate"),
                                 to
                         );
     }
-
 }

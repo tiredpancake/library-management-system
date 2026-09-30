@@ -8,20 +8,12 @@ import java.time.LocalDate;
 public record UpdateMemberRequest(
 
         String fullName,
-
         String nationalCode,
-
         LocalDate birthDate,
-
         MembershipType membershipType,
-
         String phone,
-
         String address,
-
         String postalCode,
-
         MemberStatus status
-
 ) {
 }

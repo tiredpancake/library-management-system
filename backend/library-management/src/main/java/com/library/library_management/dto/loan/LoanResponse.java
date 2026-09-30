@@ -8,23 +8,14 @@ import java.time.LocalDateTime;
 public record LoanResponse(
 
         Long id,
-
         String trackingCode,
-
         String membershipNumber,
-
         String bookCode,
-
         LoanType type,
-
         LoanStatus status,
-
         LocalDateTime requestDate,
-
         LocalDateTime dueDate,
-
         LocalDateTime returnDate,
-
         Integer renewCount
 
 ) {

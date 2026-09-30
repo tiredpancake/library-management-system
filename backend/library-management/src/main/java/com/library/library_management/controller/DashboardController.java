@@ -23,16 +23,6 @@ public class DashboardController {
 
     @GetMapping("/summary")
     public DashboardResponse summary() {
-
-        return new DashboardResponse(
-                bookRepository.count(),
-                memberRepository.count(),
-                loanRepository.countByStatusAndReturnDateIsNull(
-                        Enums.LoanStatus.SUCCESS
-                ),
-                fineRepository.countByStatus(
-                        Enums.FineStatus.UNPAID
-                )
-        );
+        return new DashboardResponse(bookRepository.count(), memberRepository.count(), loanRepository.countByStatusAndReturnDateIsNull(Enums.LoanStatus.SUCCESS), fineRepository.countByStatus(Enums.FineStatus.UNPAID));
     }
 }

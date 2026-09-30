@@ -8,11 +8,8 @@ import java.util.Optional;
 public interface BookRepository extends JpaRepository<Book, Long> {
 
     Optional<Book> findByIsbn(String isbn);
-
     Optional<Book> findByBookCode(String bookCode);
-
     boolean existsByIsbn(String isbn);
-
     boolean existsByBookCode(String bookCode);
 
 }

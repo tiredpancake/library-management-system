@@ -37,17 +37,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 
-
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
 
 
     private final AppUserDetailsService appUserDetailsService;
-
-
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
 
 
     @Bean
@@ -56,115 +52,66 @@ public class SecurityConfig {
     ) throws Exception {
 
 
-        http
-
-                .csrf(csrf -> csrf.disable())
-
+        http.csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
-
-
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers(
                                 "/api/auth/login",
-
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
-
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
-
                                 "/v3/api-docs.yaml",
-
                                 "/webjars/**"
                         )
                         .permitAll()
-
                         .anyRequest()
                         .authenticated()
 
                 )
 
-
-                .authenticationProvider(
-                        authenticationProvider()
-                )
-
-
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
-
-
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
 
     }
 
 
-
-
     @Bean
-    public AuthenticationProvider authenticationProvider(){
-
+    public AuthenticationProvider authenticationProvider() {
 
         DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(
-                        appUserDetailsService
-                );
+                new DaoAuthenticationProvider(appUserDetailsService);
 
-
-        provider.setPasswordEncoder(
-                passwordEncoder()
-        );
-
+        provider.setPasswordEncoder(passwordEncoder());
 
         return provider;
 
     }
 
 
-
-
-
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
 
         return new BCryptPasswordEncoder();
 
     }
 
 
-
-
-
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration
     ) throws Exception {
-
-
         return configuration.getAuthenticationManager();
 
     }
 
 
-
-
-
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(){
+    public CorsConfigurationSource corsConfigurationSource() {
 
-
-        CorsConfiguration configuration =
-                new CorsConfiguration();
-
-
-        configuration.setAllowedOrigins(
-                List.of(
-                        "http://localhost:5173"
-                )
-        );
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173","http://localhost:3000"));
 
 
         configuration.setAllowedMethods(
@@ -177,29 +124,14 @@ public class SecurityConfig {
                 )
         );
 
-
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
-
-
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
-
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
-
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
 
     }
-
-
 }

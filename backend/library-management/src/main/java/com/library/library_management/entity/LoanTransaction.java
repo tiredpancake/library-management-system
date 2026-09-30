@@ -1,7 +1,10 @@
 package com.library.library_management.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -58,7 +61,7 @@ public class LoanTransaction {
 
 
     @Column(nullable = false)
-    private Integer renewCount ;
+    private Integer renewCount;
 
 
     private String errorMessage;

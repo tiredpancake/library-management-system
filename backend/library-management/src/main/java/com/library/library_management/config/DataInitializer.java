@@ -11,34 +11,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 
-
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
-
     private final AppUserRepository appUserRepository;
-
     private final PasswordEncoder passwordEncoder;
-
-
 
     @Override
     public void run(String... args) {
 
         if (appUserRepository.findByUsername("admin").isEmpty()) {
-
             AppUser user = new AppUser();
-
             user.setUsername("admin");
-
-            user.setPassword(
-                    passwordEncoder.encode("test123")
-            );
-
+            user.setPassword(passwordEncoder.encode("test123"));
             appUserRepository.save(user);
         }
-
     }
-
 }
