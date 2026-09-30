@@ -54,6 +54,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             }
 
+            System.out.println("JWT USERNAME = " + username);
+
+            System.out.println("TOKEN VALID = " + jwtService.isTokenValid(jwt, userDetails));
+
         }
         filterChain.doFilter(request, response);
 

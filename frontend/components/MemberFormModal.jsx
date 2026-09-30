@@ -19,7 +19,6 @@ function MemberFormModal({ open, onClose, onSubmit }) {
   const change = (e) => {
     setForm({
       ...form,
-
       [e.target.name]: e.target.value,
     });
   };
@@ -60,138 +59,160 @@ function MemberFormModal({ open, onClose, onSubmit }) {
   return (
     <div
       className="
-fixed inset-0
-bg-black/40
-flex
-items-center
-justify-center
+fixed
+inset-0
 z-50
+bg-black/40
+overflow-y-auto
 "
     >
       <div
         className="
-bg-white
-rounded-xl
-p-6
-w-full
-max-w-lg
+min-h-screen
+flex
+items-center
+justify-center
+p-4
 "
       >
-        <h2
+        <div
           className="
+bg-white
+rounded-xl
+shadow-xl
+w-full
+max-w-lg
+p-6
+my-8
+"
+        >
+          <h2
+            className="
 text-xl
 font-bold
 mb-5
 "
-        >
-          Add Member
-        </h2>
+          >
+            Add Member
+          </h2>
 
-        <form onSubmit={submit} className="space-y-3">
-          <FormInput
-            label="Full Name"
-            name="fullName"
-            value={form.fullName}
-            onChange={change}
-            required
-            error={errors.fullName}
-          />
-
-          <FormInput
-            label="National Code"
-            name="nationalCode"
-            value={form.nationalCode}
-            onChange={change}
-            required
-            error={errors.nationalCode}
-          />
-
-          <FormInput
-            label="Birth Date"
-            name="birthDate"
-            type="date"
-            value={form.birthDate}
-            onChange={change}
-            required
-            error={errors.birthDate}
-          />
-
-          <div>
-            <label>
-              Membership Type
-              <span className="text-red-500">*</span>
-            </label>
-
-            <select
-              name="membershipType"
-              value={form.membershipType}
+          <form onSubmit={submit} className="space-y-3">
+            <FormInput
+              label="Full Name"
+              name="fullName"
+              value={form.fullName}
               onChange={change}
-              className="
+              required
+              error={errors.fullName}
+            />
+
+            <FormInput
+              label="National Code"
+              name="nationalCode"
+              value={form.nationalCode}
+              onChange={change}
+              required
+              error={errors.nationalCode}
+            />
+
+            <FormInput
+              label="Birth Date"
+              name="birthDate"
+              type="date"
+              value={form.birthDate}
+              onChange={change}
+              required
+              error={errors.birthDate}
+            />
+
+            <div>
+              <label>
+                Membership Type
+                <span className="text-red-500">*</span>
+              </label>
+
+              <select
+                name="membershipType"
+                value={form.membershipType}
+                onChange={change}
+                className="
 w-full
 border
 rounded-lg
 px-3
 py-2
 "
-            >
-              <option value="NORMAL">NORMAL</option>
+              >
+                <option value="NORMAL">NORMAL</option>
 
-              <option value="VIP">VIP</option>
-            </select>
-          </div>
+                <option value="VIP">VIP</option>
+              </select>
+            </div>
 
-          <FormInput
-            label="Phone"
-            name="phone"
-            value={form.phone}
-            onChange={change}
-            required
-            error={errors.phone}
-          />
+            <FormInput
+              label="Phone"
+              name="phone"
+              value={form.phone}
+              onChange={change}
+              required
+              error={errors.phone}
+            />
 
-          <FormInput
-            label="Address"
-            name="address"
-            value={form.address}
-            onChange={change}
-            required
-            error={errors.address}
-          />
+            <FormInput
+              label="Address"
+              name="address"
+              value={form.address}
+              onChange={change}
+              required
+              error={errors.address}
+            />
 
-          <FormInput
-            label="Postal Code"
-            name="postalCode"
-            value={form.postalCode}
-            onChange={change}
-            required
-            error={errors.postalCode}
-          />
+            <FormInput
+              label="Postal Code"
+              name="postalCode"
+              value={form.postalCode}
+              onChange={change}
+              required
+              error={errors.postalCode}
+            />
 
-          <div
-            className="
+            <div
+              className="
 flex
 justify-end
 gap-3
-mt-5
+mt-6
 "
-          >
-            <button type="button" onClick={onClose}>
-              Cancel
-            </button>
+            >
+              <button
+                type="button"
+                onClick={onClose}
+                className="
+px-4
+py-2
+border
+rounded-lg
+"
+              >
+                Cancel
+              </button>
 
-            <button
-              className="
+              <button
+                type="submit"
+                className="
 bg-blue-600
+hover:bg-blue-700
 text-white
 px-5
 py-2
 rounded-lg
 "
-            >
-              Save
-            </button>
-          </div>
-        </form>
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
