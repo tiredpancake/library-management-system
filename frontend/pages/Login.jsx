@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import api from "../api/axios";
-import { getErrorMessage } from "../utils/errorHandler";
+import { getErrorMessage } from "../src/utils/errorHandler";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -26,6 +26,7 @@ function Login() {
       });
 
       localStorage.setItem("username", username);
+      localStorage.setItem("password", password);
 
       navigate("/dashboard");
     } catch (err) {

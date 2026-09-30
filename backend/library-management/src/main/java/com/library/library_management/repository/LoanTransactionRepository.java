@@ -1,5 +1,6 @@
 package com.library.library_management.repository;
 
+import com.library.library_management.entity.Enums;
 import com.library.library_management.entity.LoanTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -27,6 +28,7 @@ public interface LoanTransactionRepository
             LocalDateTime date
     );
 
-    long countByReturnDateIsNull();
-
+    long countByStatusAndReturnDateIsNull(
+            Enums.LoanStatus status
+    );
 }

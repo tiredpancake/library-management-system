@@ -6,7 +6,7 @@ import { getBooks, createBook, updateBook, deleteBook } from "../api/bookApi";
 
 import BookFormModal from "../components/BookFormModal";
 
-import { getErrorMessage } from "../utils/errorHandler";
+import { getErrorMessage } from "../src/utils/errorHandler";
 
 function Books() {
   const [books, setBooks] = useState([]);

@@ -1,58 +1,69 @@
 import { BarChart3, Download, Filter } from "lucide-react";
+import { useEffect, useState } from "react";
 
-const reports = [
-  {
-    title: "Total Books",
-    value: 540,
-  },
-  {
-    title: "Active Members",
-    value: 120,
-  },
-  {
-    title: "Current Loans",
-    value: 35,
-  },
-  {
-    title: "Unpaid Fines",
-    value: 12,
-  },
-];
-
-const loanHistory = [
-  {
-    member: "Ali Ahmadi",
-    book: "Database Systems",
-    type: "BORROW",
-    date: "2026-09-20",
-    status: "SUCCESS",
-  },
-  {
-    member: "Sara Mohammadi",
-    book: "Marine Engineering",
-    type: "RETURN",
-    date: "2026-09-25",
-    status: "SUCCESS",
-  },
-  {
-    member: "Reza Karimi",
-    book: "Physics",
-    type: "RENEW",
-    date: "2026-09-27",
-    status: "SUCCESS",
-  },
-];
+import { getLoanHistory } from "../api/loanApi";
 
 function Reports() {
+  const [history, setHistory] = useState([]);
+
+  const [filters, setFilters] = useState({
+    membershipNumber: "",
+    bookCode: "",
+    type: "",
+    status: "",
+    from: "",
+    to: "",
+  });
+
+  const [page, setPage] = useState(0);
+
+  const [totalPages, setTotalPages] = useState(0);
+
+  const loadHistory = async (currentPage = 0) => {
+    try {
+      const res = await getLoanHistory({
+        ...filters,
+
+        page: currentPage,
+
+        size: 10,
+      });
+
+      setHistory(res.data.content);
+
+      setTotalPages(res.data.totalPages);
+    } catch (err) {
+      console.error("Failed to load loan history", err);
+    }
+  };
+
+  useEffect(() => {
+    loadHistory(page);
+  }, [page]);
+
+  const changeFilter = (e) => {
+    setFilters((prev) => ({
+      ...prev,
+
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const search = () => {
+    setPage(0);
+
+    loadHistory(0);
+  };
+
   return (
     <div>
       <div
         className="
-                flex
-                justify-between
-                items-center
-                mb-6
-                "
+        flex
+        justify-between
+        items-center
+        mb-6
+        "
       >
         <div>
           <h1 className="text-2xl font-bold">Reports</h1>
@@ -62,83 +73,37 @@ function Reports() {
 
         <button
           className="
-                    flex
-                    items-center
-                    gap-2
-                    bg-blue-600
-                    text-white
-                    px-4
-                    py-2
-                    rounded-lg
-                    "
+          flex
+          items-center
+          gap-2
+          bg-blue-600
+          text-white
+          px-4
+          py-2
+          rounded-lg
+          "
         >
           <Download size={18} />
           Export
         </button>
       </div>
 
-      {/* Summary Cards */}
-
       <div
         className="
-                grid
-                grid-cols-1
-                sm:grid-cols-2
-                lg:grid-cols-4
-                gap-6
-                mb-6
-                "
-      >
-        {reports.map((item) => (
-          <div
-            key={item.title}
-            className="
-                            bg-white
-                            rounded-xl
-                            shadow
-                            p-6
-                            "
-          >
-            <p
-              className="
-                                text-slate-500
-                                text-sm
-                                "
-            >
-              {item.title}
-            </p>
-
-            <h2
-              className="
-                                text-3xl
-                                font-bold
-                                mt-2
-                                "
-            >
-              {item.value}
-            </h2>
-          </div>
-        ))}
-      </div>
-
-      {/* Filter */}
-
-      <div
-        className="
-                bg-white
-                rounded-xl
-                shadow
-                p-5
-                mb-6
-                "
+        bg-white
+        rounded-xl
+        shadow
+        p-5
+        mb-6
+        "
       >
         <div
           className="
-                    flex
-                    items-center
-                    gap-3
-                    mb-4
-                    "
+          flex
+          items-center
+          gap-3
+          mb-4
+          "
         >
           <Filter size={20} />
 
@@ -147,59 +112,109 @@ function Reports() {
 
         <div
           className="
-                    grid
-                    grid-cols-1
-                    md:grid-cols-3
-                    gap-4
-                    "
+          grid
+          grid-cols-1
+          md:grid-cols-3
+          gap-4
+          "
         >
           <input
-            type="date"
+            name="membershipNumber"
+            value={filters.membershipNumber}
+            onChange={changeFilter}
+            placeholder="Membership Number"
             className="
-                        border
-                        rounded-lg
-                        p-3
-                        "
+            border
+            rounded-lg
+            p-3
+            "
           />
 
           <input
-            type="date"
+            name="bookCode"
+            value={filters.bookCode}
+            onChange={changeFilter}
+            placeholder="Book Code"
             className="
-                        border
-                        rounded-lg
-                        p-3
-                        "
+            border
+            rounded-lg
+            p-3
+            "
           />
 
           <select
+            name="type"
+            value={filters.type}
+            onChange={changeFilter}
             className="
-                        border
-                        rounded-lg
-                        p-3
-                        "
+            border
+            rounded-lg
+            p-3
+            "
           >
-            <option>All Types</option>
+            <option value="">All Types</option>
 
-            <option>Borrow</option>
+            <option value="BORROW">Borrow</option>
 
-            <option>Return</option>
+            <option value="RETURN">Return</option>
 
-            <option>Renew</option>
+            <option value="RENEW">Renew</option>
           </select>
+
+          <input
+            type="datetime-local"
+            name="from"
+            value={filters.from}
+            onChange={changeFilter}
+            className="
+            border
+            rounded-lg
+            p-3
+            "
+          />
+
+          <input
+            type="datetime-local"
+            name="to"
+            value={filters.to}
+            onChange={changeFilter}
+            className="
+            border
+            rounded-lg
+            p-3
+            "
+          />
+
+          <button
+            onClick={search}
+            className="
+            bg-green-600
+            text-white
+            rounded-lg
+            px-5
+            "
+          >
+            Search
+          </button>
         </div>
       </div>
 
-      {/* History Table */}
-
       <div
         className="
-                bg-white
-                rounded-xl
-                shadow
-                p-5
-                "
+        bg-white
+        rounded-xl
+        shadow
+        p-5
+        "
       >
-        <div className="flex gap-2 items-center mb-5">
+        <div
+          className="
+          flex
+          gap-2
+          items-center
+          mb-5
+          "
+        >
           <BarChart3 />
 
           <h2 className="font-semibold">Loan History</h2>
@@ -210,48 +225,48 @@ function Reports() {
             <thead>
               <tr
                 className="
-                        border-b
-                        text-left
-                        "
+                border-b
+                text-left
+                "
               >
-                <th className="p-3">Member</th>
+                <th className="p-3">Membership</th>
 
-                <th>Book</th>
+                <th>Book Code</th>
 
                 <th>Type</th>
 
-                <th>Date</th>
+                <th>Request Date</th>
 
                 <th>Status</th>
               </tr>
             </thead>
 
             <tbody>
-              {loanHistory.map((item, index) => (
+              {history.map((item) => (
                 <tr
-                  key={index}
+                  key={item.id}
                   className="
-                                border-b
-                                "
+                    border-b
+                    "
                 >
-                  <td className="p-3">{item.member}</td>
+                  <td className="p-3">{item.membershipNumber}</td>
 
-                  <td>{item.book}</td>
+                  <td>{item.bookCode}</td>
 
                   <td>{item.type}</td>
 
-                  <td>{item.date}</td>
+                  <td>{new Date(item.requestDate).toLocaleDateString()}</td>
 
                   <td>
                     <span
                       className="
-                                        bg-green-100
-                                        text-green-700
-                                        px-3
-                                        py-1
-                                        rounded-full
-                                        text-sm
-                                        "
+                        bg-green-100
+                        text-green-700
+                        px-3
+                        py-1
+                        rounded-full
+                        text-sm
+                        "
                     >
                       {item.status}
                     </span>
@@ -260,6 +275,45 @@ function Reports() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div
+          className="
+          flex
+          justify-center
+          gap-4
+          mt-5
+          "
+        >
+          <button
+            disabled={page === 0}
+            onClick={() => setPage(page - 1)}
+            className="
+            px-4
+            py-2
+            border
+            rounded
+            "
+          >
+            Previous
+          </button>
+
+          <span>
+            {page + 1} / {totalPages}
+          </span>
+
+          <button
+            disabled={page + 1 >= totalPages}
+            onClick={() => setPage(page + 1)}
+            className="
+            px-4
+            py-2
+            border
+            rounded
+            "
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

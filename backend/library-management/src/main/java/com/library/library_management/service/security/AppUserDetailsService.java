@@ -28,14 +28,11 @@ public class AppUserDetailsService implements UserDetailsService {
                         )
                 );
 
-        System.out.println(
-                "LOGIN USER FOUND: " + user.getUsername()
-        );
 
 
         return User.builder()
                 .username(user.getUsername())
-                .password("{noop}" + user.getPassword())
+                .password(user.getPassword())
                 .roles("USER")
                 .build();
     }
