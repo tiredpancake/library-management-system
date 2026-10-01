@@ -35,7 +35,10 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public MemberResponse createMember(CreateMemberRequest request) {
         if (memberRepository.existsByNationalCode(request.nationalCode())) {
-            throw new DuplicateResourceException("Member with this national code already exists");
+            throw new DuplicateResourceException(
+                    "nationalCode",
+                    "National code already exists"
+            );
         }
 
         Member member = new Member();
@@ -104,12 +107,17 @@ public class MemberServiceImpl implements MemberService {
         }
 
         if (request.nationalCode() != null && !member.getNationalCode().equals(request.nationalCode())) {
-            saveHistory(member, "nationalCode", member.getNationalCode(), request.nationalCode());
             if (memberRepository.existsByNationalCode(request.nationalCode())) {
-                throw new DuplicateResourceException("National code already exists");
+
+                throw new DuplicateResourceException(
+                        "nationalCode",
+                        "National code already exists"
+                );
             }
+            saveHistory(member, "nationalCode", member.getNationalCode(), request.nationalCode());
 
             member.setNationalCode(request.nationalCode());
+
         }
 
         if (request.birthDate() != null && !member.getBirthDate().equals(request.birthDate())) {
@@ -162,7 +170,23 @@ public class MemberServiceImpl implements MemberService {
 
     private MemberResponse mapToResponse(Member member) {
 
-        return new MemberResponse(member.getId(), member.getMembershipNumber(), member.getFullName(), member.getNationalCode(), member.getBirthDate(), member.getMembershipType(), member.getPhone(), member.getAddress(), member.getPostalCode(), member.getStatus(), member.getCreatedAt(), member.getUpdatedAt());
+
+        return new MemberResponse(
+
+                member.getId(),
+                member.getMembershipNumber(),
+                member.getFullName(),
+                member.getNationalCode(),
+                member.getBirthDate(),
+                member.getMembershipType(),
+                member.getPhone(),
+                member.getAddress(),
+                member.getPostalCode(),
+                member.getStatus(),
+                member.getCreatedAt()
+
+        );
+
     }
 
     private void saveHistory(Member member, String fieldName, String oldValue, String newValue) {

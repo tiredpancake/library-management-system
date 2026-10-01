@@ -17,6 +17,7 @@ public record BookResponse(
         Integer publishYear,
         Integer totalCopies,
         Integer availableCopies,
+        Integer borrowedCopies,
         BigDecimal price,
         BookStatus status,
         LocalDateTime createdAt,

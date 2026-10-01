@@ -13,18 +13,21 @@ public interface FineRepository extends JpaRepository<Fine, Long> {
 
     Optional<Fine> findByLoanTransactionId(Long loanTransactionId);
 
+
     @Query("""
-            SELECT COALESCE(SUM(f.amount - f.paidAmount), 0)
-            FROM Fine f
-            WHERE f.loanTransaction.member.id = :memberId
-            AND f.status <> com.library.library_management.entity.Enums.FineStatus.PAID
-            """)
+       SELECT COALESCE(SUM(f.amount - f.paidAmount), 0)
+       FROM Fine f
+       WHERE f.loanTransaction.member.id = :memberId
+       AND f.status <> com.library.library_management.entity.Enums.FineStatus.PAID
+       """)
     BigDecimal sumUnpaidFineByMemberId(Long memberId);
+
 
     List<Fine> findByLoanTransactionMemberIdAndStatusNot(
             Long memberId,
             Enums.FineStatus status
     );
-
-    long countByStatus(Enums.FineStatus status);
+    long countByStatusNot(
+            Enums.FineStatus status
+    );
 }

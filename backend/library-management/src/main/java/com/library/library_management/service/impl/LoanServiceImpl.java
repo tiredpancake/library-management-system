@@ -39,7 +39,9 @@ public class LoanServiceImpl implements LoanService {
     public LoanResponse borrowBook(BorrowRequest request) {
         Member member = memberRepository.findByMembershipNumber(request.membershipNumber()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
 
+
         Book book = bookRepository.findByBookCode(request.bookCode()).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+
 
         loanValidator.validateMember(member);
         loanValidator.validateLoanLimit(member);
@@ -47,20 +49,40 @@ public class LoanServiceImpl implements LoanService {
         loanValidator.validateUnpaidFine(member);
         loanValidator.validateBook(book);
 
+
         LoanTransaction loan = new LoanTransaction();
+
+
         loan.setMember(member);
+
         loan.setBook(book);
+
         loan.setCreatedBy(getCurrentUser());
+
+
         loan.setType(Enums.LoanType.BORROW);
+
+
         loan.setStatus(Enums.LoanStatus.SUCCESS);
+
+
         loan.setTrackingCode(generateTrackingCode());
-        loan.setRequestDate(LocalDateTime.now());
-        loan.setDueDate(LocalDateTime.now().plusDays(properties.getLoanPeriodDays()));
+
+
+        LocalDateTime now = LocalDateTime.now();
+
+        loan.setRequestDate(now);
+
+        loan.setDueDate(now.plusDays(properties.getLoanPeriodDays()));
+
+
         loan.setRenewCount(0);
+
         book.setAvailableCopies(book.getAvailableCopies() - 1);
         bookRepository.save(book);
 
         LoanTransaction savedLoan = loanRepository.save(loan);
+
         return mapToResponse(savedLoan);
 
     }
@@ -71,32 +93,68 @@ public class LoanServiceImpl implements LoanService {
     public LoanResponse returnBook(ReturnRequest request) {
 
         LoanTransaction oldLoan = loanRepository.findByTrackingCode(request.trackingCode()).orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
+
+
         if (oldLoan.getReturnDate() != null) {
 
             throw new BusinessException("Book already returned");
         }
 
+        if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
+
+            throw new BusinessException("This loan is no longer the current transaction. Use the latest tracking code.");
+        }
+
 
         LoanTransaction returnTransaction = new LoanTransaction();
+
+
         returnTransaction.setMember(oldLoan.getMember());
+
+
         returnTransaction.setBook(oldLoan.getBook());
+
+
         returnTransaction.setCreatedBy(getCurrentUser());
+
+
         returnTransaction.setType(Enums.LoanType.RETURN);
+
+
         returnTransaction.setStatus(Enums.LoanStatus.SUCCESS);
+
+
         returnTransaction.setParentTransaction(oldLoan);
+
+
         returnTransaction.setTrackingCode(generateTrackingCode());
-        returnTransaction.setRequestDate(LocalDateTime.now());
+
+
+        LocalDateTime now = LocalDateTime.now();
+
+        returnTransaction.setRequestDate(now);
+
         returnTransaction.setDueDate(oldLoan.getDueDate());
-        returnTransaction.setReturnDate(LocalDateTime.now());
+
+        returnTransaction.setReturnDate(now);
+
+
         returnTransaction.setRenewCount(oldLoan.getRenewCount());
 
+
         Book book = oldLoan.getBook();
+
         book.setAvailableCopies(book.getAvailableCopies() + 1);
 
         bookRepository.save(book);
+
+
         LoanTransaction savedReturn = loanRepository.save(returnTransaction);
 
+
         createFineIfNeeded(savedReturn);
+
+
         return mapToResponse(savedReturn);
     }
 
@@ -107,31 +165,62 @@ public class LoanServiceImpl implements LoanService {
 
         LoanTransaction oldLoan = loanRepository.findByTrackingCode(request.trackingCode()).orElseThrow(() -> new BusinessException("Loan not found"));
 
+
         if (oldLoan.getReturnDate() != null) {
 
             throw new BusinessException("Book already returned");
         }
+
+        if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
+
+            throw new BusinessException("This loan is no longer the current transaction. Use the latest tracking code.");
+        }
+
 
         if (oldLoan.getRenewCount() >= properties.getMaxRenewCount()) {
 
             throw new BusinessException("Maximum renew limit reached");
         }
 
+
         LoanTransaction renew = new LoanTransaction();
         renew.setMember(oldLoan.getMember());
         renew.setBook(oldLoan.getBook());
         renew.setCreatedBy(getCurrentUser());
         renew.setType(Enums.LoanType.RENEW);
+
         renew.setStatus(Enums.LoanStatus.SUCCESS);
         renew.setParentTransaction(oldLoan);
         renew.setRenewCount(oldLoan.getRenewCount() + 1);
-        renew.setRequestDate(LocalDateTime.now());
-        renew.setDueDate(oldLoan.getDueDate().plusDays(14));
+
+
+        LocalDateTime now = LocalDateTime.now();
+
+        renew.setRequestDate(now);
+
+        renew.setDueDate(oldLoan.getDueDate().plusDays(properties.getLoanPeriodDays()));
+
+
         renew.setTrackingCode(generateTrackingCode());
+
 
         LoanTransaction saved = loanRepository.save(renew);
 
+
         return mapToResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LoanResponse getLoanStatus(String trackingCode) {
+
+        if (trackingCode == null || trackingCode.isBlank()) {
+            throw new BusinessException("Tracking code is required");
+        }
+
+        LoanTransaction loan = loanRepository.findByTrackingCode(trackingCode.trim()).orElseThrow(() -> new ResourceNotFoundException("Tracking code not found"));
+
+        return mapToResponse(loan);
     }
 
     private String generateTrackingCode() {
@@ -150,14 +239,23 @@ public class LoanServiceImpl implements LoanService {
         return new LoanResponse(
 
                 loan.getId(),
+
                 loan.getTrackingCode(),
+
                 loan.getMember().getMembershipNumber(),
+
                 loan.getBook().getBookCode(),
+
                 loan.getType(),
+
                 loan.getStatus(),
+
                 loan.getRequestDate(),
+
                 loan.getDueDate(),
+
                 loan.getReturnDate(),
+
                 loan.getRenewCount());
     }
 
@@ -169,13 +267,23 @@ public class LoanServiceImpl implements LoanService {
 
         if (loan.getReturnDate().isAfter(loan.getDueDate())) {
 
+
             long lateDays = java.time.Duration.between(loan.getDueDate(), loan.getReturnDate()).toDays();
+
+
             BigDecimal amount = BigDecimal.valueOf(Math.min(lateDays * properties.getFinePerDay(), properties.getMaxFine()));
+
+
             Fine fine = new Fine();
+
             fine.setLoanTransaction(loan);
+
             fine.setAmount(amount);
+
             fine.setStatus(Enums.FineStatus.UNPAID);
+
             fine.setCreatedAt(LocalDateTime.now());
+
             fine.setPaidAmount(BigDecimal.ZERO);
             fineRepository.save(fine);
         }

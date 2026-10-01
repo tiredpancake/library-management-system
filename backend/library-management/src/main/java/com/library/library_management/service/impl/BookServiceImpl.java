@@ -32,9 +32,12 @@ public class BookServiceImpl implements BookService {
     public BookResponse createBook(CreateBookRequest request) {
         if (bookRepository.existsByIsbn(request.isbn())) {
 
-            throw new DuplicateResourceException("Book with this ISBN already exists");
+            throw new DuplicateResourceException("isbn", "ISBN already exists");
         }
+        if (request.publishYear() < 1000 || request.publishYear() > LocalDateTime.now().getYear()) {
 
+            throw new BusinessException("Invalid publish year");
+        }
         Book book = new Book();
         book.setIsbn(request.isbn());
         book.setTitle(request.title());
@@ -51,6 +54,16 @@ public class BookServiceImpl implements BookService {
         book.setCreatedBy(getCurrentUser());
         Book savedBook = bookRepository.save(book);
         return mapToResponse(savedBook);
+    }
+    @Override
+    public BookResponse getById(Long id) {
+
+        Book book = bookRepository.findById(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Book not found")
+                );
+
+        return mapToResponse(book);
     }
 
 
@@ -92,20 +105,20 @@ public class BookServiceImpl implements BookService {
         if (request.title() != null) {
             book.setTitle(request.title());
         }
-
         if (request.author() != null) {
             book.setAuthor(request.author());
         }
-
         if (request.category() != null) {
             book.setCategory(request.category());
         }
-
         if (request.publisher() != null) {
             book.setPublisher(request.publisher());
         }
-
         if (request.publishYear() != null) {
+            if (request.publishYear() < 1000 || request.publishYear() > LocalDateTime.now().getYear()) {
+
+                throw new BusinessException("Invalid publish year");
+            }
             book.setPublishYear(request.publishYear());
         }
 
@@ -119,25 +132,22 @@ public class BookServiceImpl implements BookService {
 
         if (request.totalCopies() != null) {
 
-            int oldTotalCopies = book.getTotalCopies();
             int newTotalCopies = request.totalCopies();
+            int borrowedCopies = book.getTotalCopies() - book.getAvailableCopies();
 
-            if (newTotalCopies < 0) {
-                throw new ResourceNotFoundException("Total copies cannot be negative");
+            if (newTotalCopies < borrowedCopies) {
+                throw new BusinessException("Cannot reduce total copies below borrowed copies");
+
             }
 
-            int difference = newTotalCopies - oldTotalCopies;
+            int difference = newTotalCopies - book.getTotalCopies();
             int newAvailableCopies = book.getAvailableCopies() + difference;
 
-            if (newAvailableCopies < 0) {
-
-                throw new ResourceNotFoundException("Cannot reduce copies because some books are borrowed");
-            }
-
             book.setTotalCopies(newTotalCopies);
-            book.setAvailableCopies(newAvailableCopies);
-        }
 
+            book.setAvailableCopies(newAvailableCopies);
+
+        }
         book.setUpdatedAt(LocalDateTime.now());
         Book savedBook = bookRepository.save(book);
         return mapToResponse(savedBook);
@@ -163,11 +173,9 @@ public class BookServiceImpl implements BookService {
 
     private BookResponse mapToResponse(Book book) {
 
-        return new BookResponse(
-
-                book.getId(), book.getBookCode(), book.getIsbn(), book.getTitle(), book.getAuthor(), book.getCategory(), book.getPublisher(), book.getPublishYear(), book.getTotalCopies(), book.getAvailableCopies(), book.getPrice(), book.getStatus(), book.getCreatedAt(), book.getUpdatedAt()
-
-        );
+        return new BookResponse(book.getId(), book.getBookCode(), book.getIsbn(), book.getTitle(), book.getAuthor(), book.getCategory(), book.getPublisher(), book.getPublishYear(), book.getTotalCopies(), book.getAvailableCopies(),
+                book.getTotalCopies() - book.getAvailableCopies(),
+                book.getPrice(), book.getStatus(), book.getCreatedAt(), book.getUpdatedAt());
     }
 
 }

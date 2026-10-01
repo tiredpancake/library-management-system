@@ -1,37 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FormInput from "../FormInput";
 
-function BorrowModal({ open, onClose, onSubmit }) {
-  const [form, setForm] = useState({
-    membershipNumber: "",
-    bookCode: "",
-  });
+const EMPTY_FORM = {
+  membershipNumber: "",
+  bookCode: "",
+};
 
+function BorrowModal({ open, onClose, onSubmit }) {
+  const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (!open) {
+      setForm(EMPTY_FORM);
+      setErrors({});
+    }
+  }, [open]);
 
   if (!open) return null;
 
   const change = (e) => {
-    setForm({
-      ...form,
-
+    setForm((current) => ({
+      ...current,
       [e.target.name]: e.target.value,
-    });
+    }));
+
+    setErrors((current) => ({
+      ...current,
+      [e.target.name]: "",
+    }));
+  };
+
+  const close = () => {
+    setForm(EMPTY_FORM);
+    setErrors({});
+    onClose();
   };
 
   const validate = () => {
-    let e = {};
+    const e = {};
 
-    if (!form.membershipNumber) {
+    if (!form.membershipNumber.trim()) {
       e.membershipNumber = "Membership number is required";
     }
 
-    if (!form.bookCode) {
+    if (!form.bookCode.trim()) {
       e.bookCode = "Book code is required";
     }
 
     setErrors(e);
-
     return Object.keys(e).length === 0;
   };
 
@@ -39,39 +56,17 @@ function BorrowModal({ open, onClose, onSubmit }) {
     e.preventDefault();
 
     if (validate()) {
-      onSubmit(form);
+      onSubmit({
+        membershipNumber: form.membershipNumber.trim(),
+        bookCode: form.bookCode.trim(),
+      });
     }
   };
 
   return (
-    <div
-      className="
-fixed inset-0
-bg-black/40
-flex
-items-center
-justify-center
-z-50
-"
-    >
-      <div
-        className="
-bg-white
-rounded-xl
-p-6
-w-full
-max-w-md
-"
-      >
-        <h2
-          className="
-text-xl
-font-bold
-mb-5
-"
-        >
-          Borrow Book
-        </h2>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md">
+        <h2 className="text-xl font-bold mb-5">Borrow Book</h2>
 
         <form onSubmit={submit} className="space-y-4">
           <FormInput
@@ -92,26 +87,14 @@ mb-5
             error={errors.bookCode}
           />
 
-          <div
-            className="
-flex
-justify-end
-gap-3
-mt-5
-"
-          >
-            <button type="button" onClick={onClose}>
+          <div className="flex justify-end gap-3 mt-5">
+            <button type="button" onClick={close}>
               Cancel
             </button>
 
             <button
-              className="
-bg-blue-600
-text-white
-px-5
-py-2
-rounded-lg
-"
+              type="submit"
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg"
             >
               Borrow
             </button>

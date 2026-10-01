@@ -1,19 +1,51 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import FormInput from "./FormInput";
-import { mapBackendError } from "../src/utils/errorHandler";
+
 function BookFormModal({ open, onClose, onSubmit, book }) {
-  const [form, setForm] = useState({
-    isbn: book?.isbn || "",
-    title: book?.title || "",
-    author: book?.author || "",
-    category: book?.category || "",
-    publisher: book?.publisher || "",
-    publishYear: book?.publishYear || "",
-    totalCopies: book?.totalCopies || "",
-    price: book?.price || "",
-  });
+  const emptyForm = {
+    isbn: "",
+    title: "",
+    author: "",
+    category: "",
+    publisher: "",
+    publishYear: "",
+    totalCopies: "",
+    price: "",
+    status: "ACTIVE",
+  };
+
+  const [form, setForm] = useState(emptyForm);
 
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (book) {
+      setForm({
+        isbn: book.isbn || "",
+
+        title: book.title || "",
+
+        author: book.author || "",
+
+        category: book.category || "",
+
+        publisher: book.publisher || "",
+
+        publishYear: book.publishYear || "",
+
+        totalCopies: book.totalCopies || "",
+
+        price: book.price || "",
+
+        status: book.status || "ACTIVE",
+      });
+    } else {
+      setForm(emptyForm);
+
+      setErrors({});
+    }
+  }, [book, open]);
 
   if (!open) return null;
 
@@ -62,6 +94,10 @@ function BookFormModal({ open, onClose, onSubmit, book }) {
       e.totalCopies = "Total copies is required";
     }
 
+    if (Number(form.totalCopies) < 0) {
+      e.totalCopies = "Total copies cannot be negative";
+    }
+
     setErrors(e);
 
     return Object.keys(e).length === 0;
@@ -74,9 +110,17 @@ function BookFormModal({ open, onClose, onSubmit, book }) {
       try {
         await onSubmit(form);
       } catch (err) {
-        setErrors({
-          ...mapBackendError(err),
-        });
+        const response = err.response?.data;
+
+        if (response?.field) {
+          setErrors({
+            [response.field]: response.message,
+          });
+        } else {
+          setErrors({
+            server: response?.message || "Something went wrong",
+          });
+        }
       }
     }
   };
@@ -84,134 +128,213 @@ function BookFormModal({ open, onClose, onSubmit, book }) {
   return (
     <div
       className="
-fixed inset-0
+fixed
+inset-0
 bg-black/40
+z-50
 flex
 items-center
 justify-center
-z-50
+p-4
 "
     >
       <div
         className="
 bg-white
 rounded-xl
-p-6
+shadow-xl
 w-full
 max-w-lg
+max-h-[90vh]
+flex
+flex-col
 "
       >
-        <h2
+        {/* Header */}
+
+        <div
           className="
-text-xl
-font-bold
-mb-5
+p-6
+border-b
 "
         >
-          {book ? "Edit Book" : "Add Book"}
-        </h2>
+          <h2
+            className="
+text-xl
+font-bold
+"
+          >
+            {book ? "Edit Book" : "Add Book"}
+          </h2>
 
-        <form onSubmit={submit} className="space-y-3">
-          {!book && (
+          {errors.server && (
+            <p
+              className="
+text-red-600
+text-sm
+mt-3
+"
+            >
+              {errors.server}
+            </p>
+          )}
+        </div>
+
+        {/* Body */}
+
+        <div
+          className="
+overflow-y-auto
+p-6
+"
+        >
+          <form
+            onSubmit={submit}
+            className="
+space-y-3
+"
+          >
+            {!book && (
+              <FormInput
+                label="ISBN"
+                name="isbn"
+                value={form.isbn}
+                onChange={change}
+                required
+                error={errors.isbn}
+              />
+            )}
+
             <FormInput
-              label="ISBN"
-              name="isbn"
-              value={form.isbn}
+              label="Title"
+              name="title"
+              value={form.title}
               onChange={change}
               required
-              error={errors.isbn}
+              error={errors.title}
             />
-          )}
 
-          <FormInput
-            label="Title"
-            name="title"
-            value={form.title}
-            onChange={change}
-            required
-            error={errors.title}
-          />
+            <FormInput
+              label="Author"
+              name="author"
+              value={form.author}
+              onChange={change}
+              required
+              error={errors.author}
+            />
 
-          <FormInput
-            label="Author"
-            name="author"
-            value={form.author}
-            onChange={change}
-            required
-            error={errors.author}
-          />
+            <FormInput
+              label="Category"
+              name="category"
+              value={form.category}
+              onChange={change}
+              required
+              error={errors.category}
+            />
 
-          <FormInput
-            label="Category"
-            name="category"
-            value={form.category}
-            onChange={change}
-            required
-            error={errors.category}
-          />
+            <FormInput
+              label="Publisher"
+              name="publisher"
+              value={form.publisher}
+              onChange={change}
+              required
+              error={errors.publisher}
+            />
 
-          <FormInput
-            label="Publisher"
-            name="publisher"
-            value={form.publisher}
-            onChange={change}
-            required
-            error={errors.publisher}
-          />
+            <FormInput
+              label="Publish Year"
+              name="publishYear"
+              type="number"
+              value={form.publishYear}
+              onChange={change}
+              required
+              error={errors.publishYear}
+            />
 
-          <FormInput
-            label="Publish Year"
-            name="publishYear"
-            type="number"
-            value={form.publishYear}
-            onChange={change}
-            required
-            error={errors.publishYear}
-          />
+            <FormInput
+              label="Total Copies"
+              name="totalCopies"
+              type="number"
+              value={form.totalCopies}
+              onChange={change}
+              required
+              error={errors.totalCopies}
+            />
 
-          <FormInput
-            label="Total Copies"
-            name="totalCopies"
-            type="number"
-            value={form.totalCopies}
-            onChange={change}
-            required
-            error={errors.totalCopies}
-          />
+            <FormInput
+              label="Price"
+              name="price"
+              type="number"
+              value={form.price}
+              onChange={change}
+              error={errors.price}
+            />
 
-          <FormInput
-            label="Price"
-            name="price"
-            type="number"
-            value={form.price}
-            onChange={change}
-          />
+            <div>
+              <label>
+                Status
+                <span className="text-red-500 ml-1">*</span>
+              </label>
 
-          <div
-            className="
+              <select
+                name="status"
+                value={form.status}
+                onChange={change}
+                className="
+w-full
+border
+rounded-lg
+px-3
+py-2
+"
+              >
+                <option value="ACTIVE">ACTIVE</option>
+
+                <option value="INACTIVE">INACTIVE</option>
+
+                <option value="DELETED">DELETED</option>
+              </select>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer */}
+
+        <div
+          className="
+p-6
+border-t
 flex
 justify-end
 gap-3
-mt-5
+"
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="
+border
+px-4
+py-2
+rounded-lg
 "
           >
-            <button type="button" onClick={onClose}>
-              Cancel
-            </button>
+            Cancel
+          </button>
 
-            <button
-              className="
+          <button
+            onClick={submit}
+            className="
 bg-blue-600
 text-white
 px-5
 py-2
 rounded-lg
 "
-            >
-              Save
-            </button>
-          </div>
-        </form>
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
   );

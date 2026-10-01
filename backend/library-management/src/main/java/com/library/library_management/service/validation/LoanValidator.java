@@ -21,21 +21,16 @@ public class LoanValidator {
     private final LibraryProperties properties;
     private final FineRepository fineRepository;
 
-
     public void validateMember(Member member) {
-
         if (member.getStatus() != Enums.MemberStatus.ACTIVE) {
             throw new BusinessException("Member is not active");
         }
     }
 
-
     public void validateBook(Book book) {
-
         if (book.getStatus() != Enums.BookStatus.ACTIVE) {
             throw new BusinessException("Book is not active");
         }
-
 
         if (book.getAvailableCopies() <= 0) {
             throw new BusinessException("Book is not available");
@@ -43,33 +38,25 @@ public class LoanValidator {
     }
 
     public void validateLoanLimit(Member member) {
-
-        long activeLoans = loanRepository.countByMemberIdAndReturnDateIsNull(member.getId());
-
+        long activeLoans = loanRepository.countCurrentActiveLoansByMemberId(member.getId());
 
         if (activeLoans >= properties.getMaxActiveLoans()) {
-
             throw new BusinessException("Member reached maximum active loans");
         }
     }
 
     public void validateOverdue(Member member) {
+        long overdueLoans = loanRepository.countCurrentOverdueLoansByMemberId(member.getId(), LocalDateTime.now());
 
-        boolean hasOverdue = loanRepository.existsByMemberIdAndReturnDateIsNullAndDueDateBefore(member.getId(), LocalDateTime.now());
-
-        if (hasOverdue) {
-
+        if (overdueLoans > 0) {
             throw new BusinessException("Member has overdue books");
         }
     }
 
     public void validateUnpaidFine(Member member) {
-
         BigDecimal unpaid = fineRepository.sumUnpaidFineByMemberId(member.getId());
 
-
         if (unpaid.compareTo(BigDecimal.valueOf(properties.getMaxUnpaidFine())) > 0) {
-
             throw new BusinessException("Member has too much unpaid fine");
         }
     }

@@ -12,6 +12,16 @@ import Loans from "../pages/Loans";
 import Fines from "../pages/Fines";
 import Reports from "../pages/Reports";
 
+import ProtectedRoute from "../components/ProtectedRoute";
+
+function PrivatePage({ children }) {
+  return (
+    <ProtectedRoute>
+      <MainLayout>{children}</MainLayout>
+    </ProtectedRoute>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -21,56 +31,56 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         <Route
-          path="/reports"
-          element={
-            <MainLayout>
-              <Reports />
-            </MainLayout>
-          }
-        />
-
-        <Route
           path="/dashboard"
           element={
-            <MainLayout>
+            <PrivatePage>
               <Dashboard />
-            </MainLayout>
+            </PrivatePage>
           }
         />
 
         <Route
           path="/books"
           element={
-            <MainLayout>
+            <PrivatePage>
               <Books />
-            </MainLayout>
+            </PrivatePage>
           }
         />
 
         <Route
           path="/members"
           element={
-            <MainLayout>
+            <PrivatePage>
               <Members />
-            </MainLayout>
+            </PrivatePage>
           }
         />
 
         <Route
           path="/loans"
           element={
-            <MainLayout>
+            <PrivatePage>
               <Loans />
-            </MainLayout>
+            </PrivatePage>
           }
         />
 
         <Route
           path="/fines"
           element={
-            <MainLayout>
+            <PrivatePage>
               <Fines />
-            </MainLayout>
+            </PrivatePage>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <PrivatePage>
+              <Reports />
+            </PrivatePage>
           }
         />
       </Routes>

@@ -7,8 +7,9 @@ function ReturnModal({ open, onClose, onSubmit, trackingCode = "" }) {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    setCode(trackingCode);
-  }, [trackingCode]);
+    setCode(open ? trackingCode : "");
+    setErrors({});
+  }, [open, trackingCode]);
 
   if (!open) return null;
 

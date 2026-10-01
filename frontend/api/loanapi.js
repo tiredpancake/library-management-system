@@ -17,3 +17,9 @@ export function returnBook(data) {
 export function renewLoan(data) {
   return api.post("/loans/renew", data);
 }
+
+export function getLoanStatus(trackingCode) {
+  return api.get("/loans/status", {
+    params: { trackingCode },
+  });
+}

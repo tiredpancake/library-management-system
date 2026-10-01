@@ -4,6 +4,10 @@ export function getBooks() {
   return api.get("/books");
 }
 
+export function getBookByIsbn(isbn) {
+  return api.get(`/books/isbn/${isbn}`);
+}
+
 export function createBook(data) {
   return api.post("/books", data);
 }

@@ -1,109 +1,138 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FormInput from "./FormInput";
 
-function MemberFormModal({ open, onClose, onSubmit }) {
-  const [form, setForm] = useState({
+function MemberFormModal({ open, onClose, onSubmit, member }) {
+  const emptyForm = {
     fullName: "",
     nationalCode: "",
     birthDate: "",
-    membershipType: "NORMAL",
+    membershipType: "INDIVIDUAL",
     phone: "",
     address: "",
     postalCode: "",
-  });
+    status: "ACTIVE",
+  };
 
+  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (member) {
+      setForm({
+        fullName: member.fullName || "",
+        nationalCode: member.nationalCode || "",
+        birthDate: member.birthDate || "",
+        membershipType: member.membershipType || "INDIVIDUAL",
+        phone: member.phone || "",
+        address: member.address || "",
+        postalCode: member.postalCode || "",
+        status: member.status || "ACTIVE",
+      });
+    } else {
+      setForm(emptyForm);
+    }
+
+    setErrors({});
+  }, [member, open]);
 
   if (!open) return null;
 
   const change = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    setErrors((current) => ({
+      ...current,
+      [name]: "",
+      server: "",
+    }));
   };
 
   const validate = () => {
-    let e = {};
+    const e = {};
 
-    [
-      "fullName",
-      "nationalCode",
-      "birthDate",
-      "phone",
-      "address",
-      "postalCode",
-    ].forEach((field) => {
-      if (!form[field]) {
-        e[field] = `${field} is required`;
-      }
-    });
-
-    if (!form.membershipType) {
-      e.membershipType = "Membership type is required";
-    }
+    if (!form.fullName.trim()) e.fullName = "Full name is required";
+    if (!form.nationalCode.trim()) e.nationalCode = "National code is required";
+    if (!form.birthDate) e.birthDate = "Birth date is required";
+    if (!form.phone.trim()) e.phone = "Phone is required";
+    if (!form.address.trim()) e.address = "Address is required";
+    if (!form.postalCode.trim()) e.postalCode = "Postal code is required";
 
     setErrors(e);
 
     return Object.keys(e).length === 0;
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
 
-    if (validate()) {
-      onSubmit(form);
+    if (!validate()) return;
+
+    try {
+      await onSubmit(form);
+    } catch (err) {
+      const response = err.response?.data;
+
+      if (response?.field) {
+        setErrors({
+          [response.field]: response.message,
+        });
+      } else {
+        setErrors({
+          server: response?.message || "Something went wrong",
+        });
+      }
     }
   };
 
   return (
     <div
       className="
-fixed
-inset-0
-z-50
-bg-black/40
-overflow-y-auto
-"
+      fixed
+      inset-0
+      bg-black/40
+      z-50
+      flex
+      items-center
+      justify-center
+      p-4
+      "
     >
       <div
         className="
-min-h-screen
-flex
-items-center
-justify-center
-p-4
-"
+        bg-white
+        rounded-xl
+        shadow-xl
+        w-full
+        max-w-lg
+        max-h-[90vh]
+        flex
+        flex-col
+        "
       >
-        <div
-          className="
-bg-white
-rounded-xl
-shadow-xl
-w-full
-max-w-lg
-p-6
-my-8
-"
-        >
-          <h2
-            className="
-text-xl
-font-bold
-mb-5
-"
-          >
-            Add Member
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-bold">
+            {member ? "Edit Member" : "Add Member"}
           </h2>
 
-          <form onSubmit={submit} className="space-y-3">
+          {errors.server && (
+            <p className="text-red-600 text-sm mt-3">{errors.server}</p>
+          )}
+        </div>
+
+        <form onSubmit={submit} className="flex flex-col min-h-0">
+          <div className="overflow-y-auto p-6 space-y-3">
             <FormInput
               label="Full Name"
               name="fullName"
               value={form.fullName}
               onChange={change}
-              required
               error={errors.fullName}
+              required
             />
 
             <FormInput
@@ -111,8 +140,8 @@ mb-5
               name="nationalCode"
               value={form.nationalCode}
               onChange={change}
-              required
               error={errors.nationalCode}
+              required
             />
 
             <FormInput
@@ -121,14 +150,13 @@ mb-5
               type="date"
               value={form.birthDate}
               onChange={change}
-              required
               error={errors.birthDate}
+              required
             />
 
             <div>
-              <label>
+              <label className="block text-sm font-medium mb-1">
                 Membership Type
-                <span className="text-red-500">*</span>
               </label>
 
               <select
@@ -136,16 +164,36 @@ mb-5
                 value={form.membershipType}
                 onChange={change}
                 className="
-w-full
-border
-rounded-lg
-px-3
-py-2
-"
+                w-full
+                border
+                rounded-lg
+                px-3
+                py-2
+                "
               >
-                <option value="NORMAL">NORMAL</option>
+                <option value="INDIVIDUAL">INDIVIDUAL</option>
+                <option value="ORGANIZATIONAL">ORGANIZATIONAL</option>
+              </select>
+            </div>
 
-                <option value="VIP">VIP</option>
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+
+              <select
+                name="status"
+                value={form.status}
+                onChange={change}
+                className="
+                w-full
+                border
+                rounded-lg
+                px-3
+                py-2
+                "
+              >
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+                <option value="BLOCKED">BLOCKED</option>
               </select>
             </div>
 
@@ -154,8 +202,8 @@ py-2
               name="phone"
               value={form.phone}
               onChange={change}
-              required
               error={errors.phone}
+              required
             />
 
             <FormInput
@@ -163,8 +211,8 @@ py-2
               name="address"
               value={form.address}
               onChange={change}
-              required
               error={errors.address}
+              required
             />
 
             <FormInput
@@ -172,47 +220,47 @@ py-2
               name="postalCode"
               value={form.postalCode}
               onChange={change}
-              required
               error={errors.postalCode}
+              required
             />
+          </div>
 
-            <div
+          <div
+            className="
+            p-6
+            border-t
+            flex
+            justify-end
+            gap-3
+            "
+          >
+            <button
+              type="button"
+              onClick={onClose}
               className="
-flex
-justify-end
-gap-3
-mt-6
-"
+              border
+              px-4
+              py-2
+              rounded-lg
+              "
             >
-              <button
-                type="button"
-                onClick={onClose}
-                className="
-px-4
-py-2
-border
-rounded-lg
-"
-              >
-                Cancel
-              </button>
+              Cancel
+            </button>
 
-              <button
-                type="submit"
-                className="
-bg-blue-600
-hover:bg-blue-700
-text-white
-px-5
-py-2
-rounded-lg
-"
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </div>
+            <button
+              type="submit"
+              className="
+              bg-blue-600
+              text-white
+              px-5
+              py-2
+              rounded-lg
+              "
+            >
+              Save
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

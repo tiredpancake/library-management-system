@@ -1,9 +1,6 @@
 package com.library.library_management.service;
 
-import com.library.library_management.dto.loan.BorrowRequest;
-import com.library.library_management.dto.loan.LoanResponse;
-import com.library.library_management.dto.loan.RenewRequest;
-import com.library.library_management.dto.loan.ReturnRequest;
+import com.library.library_management.dto.loan.*;
 
 public interface LoanService {
 
@@ -13,4 +10,5 @@ public interface LoanService {
 
     LoanResponse renewLoan(RenewRequest request);
 
+    LoanResponse getLoanStatus(String trackingCode);
 }
