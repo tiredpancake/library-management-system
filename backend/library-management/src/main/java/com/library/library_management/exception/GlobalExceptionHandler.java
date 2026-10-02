@@ -87,7 +87,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse(
                         null,
-                        "Book was modified by another user. Please try again.",
+                        "Resource was modified by another transaction. Please retry.",
                         409,
                         LocalDateTime.now()
                 ));

@@ -41,8 +41,9 @@ public class LoanOperationServiceImpl implements LoanOperationService {
 
         LoanTransaction loan = getPendingTransaction(transactionId);
 
-        Member member = memberRepository.findByMembershipNumber(request.membershipNumber().trim()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
-
+        Member member = memberRepository
+                .findByMembershipNumberForUpdate(request.membershipNumber().trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Member not found"));
         Book book = bookRepository.findByBookCodeForUpdate(request.bookCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
         loan.setMember(member);
@@ -87,7 +88,9 @@ public class LoanOperationServiceImpl implements LoanOperationService {
 
         } else {
 
-            Member member = memberRepository.findByMembershipNumber(request.membershipNumber().trim()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+            Member member = memberRepository
+                    .findByMembershipNumberForUpdate(request.membershipNumber().trim())
+                    .orElseThrow(() -> new ResourceNotFoundException("Member not found"));
 
             Book book = bookRepository.findByBookCode(request.bookCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
