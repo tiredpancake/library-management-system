@@ -512,19 +512,19 @@ library-management-system/
 ├── backend/
 │   └── library-management/
 │       ├── src/
-│       │   ├── main/
-│       │   └── test/
 │       ├── pom.xml
 │       └── mvnw
 │
 ├── frontend/
+│   ├── api/
+│   ├── components/
+│   ├── layout/
+│   ├── pages/
+│   ├── public/
 │   ├── src/
-│   │   ├── api/
-│   │   ├── components/
-│   │   └── pages/
-│   ├── package.json
 │   ├── Dockerfile
-│   └── nginx.conf
+│   ├── nginx.conf
+│   └── package.json
 │
 ├── docker-compose.yml
 └── README.md
