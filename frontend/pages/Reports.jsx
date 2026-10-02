@@ -54,7 +54,6 @@ function Reports() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">Reports</h1>
-          <p className="text-slate-500">Analyze library activity</p>
         </div>
 
         <button

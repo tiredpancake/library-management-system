@@ -376,9 +376,6 @@ function Loans() {
               Loans
             </h1>
           </div>
-          <p className="mt-2 text-sm text-slate-500">
-            Manage borrowing, returns, renewals, and transaction status.
-          </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -475,10 +472,6 @@ function Loans() {
               <h2 className="text-lg font-semibold text-slate-900">
                 Transaction History
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                {filteredLoans.length} transactions shown
-                {hasActiveFilters ? " with the selected filters" : ""}.
-              </p>
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
