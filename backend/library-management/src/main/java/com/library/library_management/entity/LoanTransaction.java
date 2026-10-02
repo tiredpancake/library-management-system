@@ -9,7 +9,21 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "loan_transaction")
+@Table(
+        name = "loan_transaction",
+        indexes = {
+                @Index(name = "idx_loan_member_id", columnList = "member_id"),
+                @Index(name = "idx_loan_book_id", columnList = "book_id"),
+                @Index(name = "idx_loan_request_date", columnList = "request_date"),
+                @Index(name = "idx_loan_parent_transaction", columnList = "parent_transaction_id", unique = true)
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_loan_parent_transaction",
+                        columnNames = "parent_transaction_id"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,12 +40,11 @@ public class LoanTransaction {
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "member_id")
     private Member member;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id", nullable = false)
+    @JoinColumn(name = "book_id")
     private Book book;
 
 
@@ -68,6 +81,6 @@ public class LoanTransaction {
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_transaction_id")
+    @JoinColumn(name = "parent_transaction_id", unique = true)
     private LoanTransaction parentTransaction;
 }

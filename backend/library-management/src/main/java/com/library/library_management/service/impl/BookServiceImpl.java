@@ -89,14 +89,14 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void deleteBook(Long id) {
+
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
-        bookRepository.delete(book);
-        eventLogger.info(
-                "BOOK_DELETE_SUCCESS",
-                SecurityUtils.getCurrentUsername(),
-                "bookId=" + id + " bookCode=" + book.getBookCode()
-        );
+
+        book.setStatus(Enums.BookStatus.DELETED);
+        book.setUpdatedAt(LocalDateTime.now());
+
+        bookRepository.save(book);
     }
 
     @Override

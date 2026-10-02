@@ -10,6 +10,7 @@ import {
   Search,
   SlidersHorizontal,
   X,
+  XCircle,
 } from "lucide-react";
 
 import {
@@ -407,32 +408,104 @@ function Loans() {
       )}
 
       {lastTransaction && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+        <div
+          className={`rounded-xl border p-4 ${
+            lastTransaction.status === "FAILED"
+              ? "border-red-200 bg-red-50"
+              : "border-emerald-200 bg-emerald-50"
+          }`}
+        >
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="mt-0.5 text-emerald-600" size={21} />
+            {lastTransaction.status === "FAILED" ? (
+              <XCircle className="mt-0.5 text-red-600" size={21} />
+            ) : (
+              <CheckCircle2 className="mt-0.5 text-emerald-600" size={21} />
+            )}
+
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-emerald-800">
-                Transaction completed successfully.
+              <p
+                className={`font-semibold ${
+                  lastTransaction.status === "FAILED"
+                    ? "text-red-800"
+                    : "text-emerald-800"
+                }`}
+              >
+                {lastTransaction.status === "FAILED"
+                  ? "Transaction failed."
+                  : "Transaction completed successfully."}
               </p>
+
+              {lastTransaction.status === "FAILED" &&
+                lastTransaction.errorMessage && (
+                  <p className="mt-2 text-sm text-red-700">
+                    <span className="font-semibold">Reason:</span>{" "}
+                    {lastTransaction.errorMessage}
+                  </p>
+                )}
+
               <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
                 <div>
-                  <p className="text-emerald-600">Transaction</p>
-                  <p className="font-medium text-emerald-900">
+                  <p
+                    className={
+                      lastTransaction.status === "FAILED"
+                        ? "text-red-600"
+                        : "text-emerald-600"
+                    }
+                  >
+                    Transaction
+                  </p>
+                  <p
+                    className={`font-medium ${
+                      lastTransaction.status === "FAILED"
+                        ? "text-red-900"
+                        : "text-emerald-900"
+                    }`}
+                  >
                     #{lastTransaction.id}
                   </p>
                 </div>
+
                 <div className="min-w-0">
-                  <p className="text-emerald-600">Tracking Code</p>
                   <p
-                    className="truncate font-medium text-emerald-900"
+                    className={
+                      lastTransaction.status === "FAILED"
+                        ? "text-red-600"
+                        : "text-emerald-600"
+                    }
+                  >
+                    Tracking Code
+                  </p>
+
+                  <p
+                    className={`truncate font-medium ${
+                      lastTransaction.status === "FAILED"
+                        ? "text-red-900"
+                        : "text-emerald-900"
+                    }`}
                     title={lastTransaction.trackingCode}
                   >
                     {lastTransaction.trackingCode || "—"}
                   </p>
                 </div>
+
                 <div>
-                  <p className="text-emerald-600">Request Date</p>
-                  <p className="font-medium text-emerald-900">
+                  <p
+                    className={
+                      lastTransaction.status === "FAILED"
+                        ? "text-red-600"
+                        : "text-emerald-600"
+                    }
+                  >
+                    Request Date
+                  </p>
+
+                  <p
+                    className={`font-medium ${
+                      lastTransaction.status === "FAILED"
+                        ? "text-red-900"
+                        : "text-emerald-900"
+                    }`}
+                  >
                     {formatDate(lastTransaction.requestDate)}
                   </p>
                 </div>

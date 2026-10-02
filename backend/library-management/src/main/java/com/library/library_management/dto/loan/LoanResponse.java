@@ -16,7 +16,8 @@ public record LoanResponse(
         LocalDateTime requestDate,
         LocalDateTime dueDate,
         LocalDateTime returnDate,
-        Integer renewCount
+        Integer renewCount,
+        String errorMessage
 
 ) {
 }

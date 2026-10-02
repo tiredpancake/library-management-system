@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -38,15 +37,6 @@ public class LoanValidator {
         }
     }
 
-    public void validateNoCurrentLoan(Member member, Book book) {
-
-        boolean alreadyHasBook = loanRepository.existsCurrentActiveLoan(member.getId(), book.getId(), Enums.LoanStatus.SUCCESS, List.of(Enums.LoanType.BORROW, Enums.LoanType.RENEW));
-
-        if (alreadyHasBook) {
-            throw new BusinessException("Member already has this book");
-        }
-    }
-
     public void validateLoanLimit(Member member) {
         long activeLoans = loanRepository.countCurrentActiveLoansByMemberId(member.getId());
 
@@ -56,10 +46,12 @@ public class LoanValidator {
     }
 
     public void validateOverdue(Member member) {
-        long overdueLoans = loanRepository.countCurrentOverdueLoansByMemberId(member.getId(), LocalDateTime.now());
+        LocalDateTime overdueLimit = LocalDateTime.now().minusDays(properties.getMaxOverdueDays());
+
+        long overdueLoans = loanRepository.countCurrentOverdueLoansByMemberId(member.getId(), overdueLimit);
 
         if (overdueLoans > 0) {
-            throw new BusinessException("Member has overdue books");
+            throw new BusinessException("Member has overdue books beyond the allowed limit");
         }
     }
 
@@ -68,6 +60,14 @@ public class LoanValidator {
 
         if (unpaid.compareTo(BigDecimal.valueOf(properties.getMaxUnpaidFine())) > 0) {
             throw new BusinessException("Member has too much unpaid fine");
+        }
+    }
+
+    public void validateNoCurrentLoan(Member member, Book book) {
+        boolean hasCurrentLoan = loanRepository.existsCurrentActiveLoan(member.getId(), book.getId(), Enums.LoanStatus.SUCCESS, java.util.List.of(Enums.LoanType.BORROW, Enums.LoanType.RENEW));
+
+        if (hasCurrentLoan) {
+            throw new BusinessException("Member already has this book");
         }
     }
 }

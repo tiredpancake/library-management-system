@@ -37,246 +37,286 @@ public class LoanServiceImpl implements LoanService {
     @Override
     @Transactional
     public LoanResponse borrowBook(BorrowRequest request) {
-        Member member = memberRepository.findByMembershipNumber(request.membershipNumber())
-                .orElseThrow(() -> new ResourceNotFoundException("Member not found"));
 
-        Book book = bookRepository.findByBookCode(request.bookCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        LoanTransaction loan = createPendingTransaction(Enums.LoanType.BORROW);
 
-        loanValidator.validateMember(member);
-        loanValidator.validateLoanLimit(member);
-        loanValidator.validateOverdue(member);
-        loanValidator.validateUnpaidFine(member);
-        loanValidator.validateBook(book);
-        loanValidator.validateNoCurrentLoan(member, book);
+        try {
 
-        LoanTransaction loan = new LoanTransaction();
-        loan.setMember(member);
-        loan.setBook(book);
-        loan.setCreatedBy(getCurrentUser());
-        loan.setType(Enums.LoanType.BORROW);
-        loan.setStatus(Enums.LoanStatus.SUCCESS);
-        loan.setTrackingCode(generateTrackingCode());
+            Member member = memberRepository.findByMembershipNumber(request.membershipNumber().trim()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
 
-        LocalDateTime now = LocalDateTime.now();
-        loan.setRequestDate(now);
-        loan.setDueDate(now.plusDays(properties.getLoanPeriodDays()));
-        loan.setRenewCount(0);
+            Book book = bookRepository.findByBookCode(request.bookCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
-        book.setAvailableCopies(book.getAvailableCopies() - 1);
-        bookRepository.save(book);
+            loan.setMember(member);
+            loan.setBook(book);
 
-        LoanTransaction savedLoan = loanRepository.save(loan);
+            loanValidator.validateMember(member);
+            loanValidator.validateLoanLimit(member);
+            loanValidator.validateOverdue(member);
+            loanValidator.validateUnpaidFine(member);
+            loanValidator.validateBook(book);
+            loanValidator.validateNoCurrentLoan(member, book);
 
-        eventLogger.info(
-                "LOAN_BORROW_SUCCESS",
-                SecurityUtils.getCurrentUsername(),
-                "loanId=" + savedLoan.getId()
-                        + " memberId=" + member.getId()
-                        + " bookId=" + book.getId()
-                        + " trackingCode=" + savedLoan.getTrackingCode()
-        );
+            LocalDateTime now = LocalDateTime.now();
 
-        return mapToResponse(savedLoan);
+            loan.setStatus(Enums.LoanStatus.SUCCESS);
+            loan.setRequestDate(now);
+            loan.setDueDate(now.plusDays(properties.getLoanPeriodDays()));
+            loan.setRenewCount(0);
+
+            book.setAvailableCopies(book.getAvailableCopies() - 1);
+
+            bookRepository.save(book);
+
+            LoanTransaction savedLoan = loanRepository.save(loan);
+
+            eventLogger.info("LOAN_BORROW_SUCCESS", SecurityUtils.getCurrentUsername(), "loanId=" + savedLoan.getId() + " memberId=" + member.getId() + " bookId=" + book.getId() + " trackingCode=" + savedLoan.getTrackingCode());
+
+            return mapToResponse(savedLoan);
+
+        } catch (RuntimeException ex) {
+
+            return failTransaction(loan, ex);
+        }
     }
 
     @Override
     @Transactional
     public LoanResponse returnBook(ReturnRequest request) {
-        LoanTransaction oldLoan;
 
-        if (request.trackingCode() != null && !request.trackingCode().isBlank()) {
-            oldLoan = loanRepository.findByTrackingCode(request.trackingCode().trim())
-                    .orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
-        } else {
-            Member member = memberRepository.findByMembershipNumber(request.membershipNumber().trim())
-                    .orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+        LoanTransaction returnTransaction = createPendingTransaction(Enums.LoanType.RETURN);
 
-            Book book = bookRepository.findByBookCode(request.bookCode().trim())
-                    .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        try {
 
-            oldLoan = loanRepository.findFirstByMember_IdAndBook_IdOrderByIdDesc(member.getId(), book.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Current loan not found"));
+            LoanTransaction oldLoan;
+
+            if (request.trackingCode() != null && !request.trackingCode().isBlank()) {
+
+                oldLoan = loanRepository.findByTrackingCode(request.trackingCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
+
+            } else {
+
+                Member member = memberRepository.findByMembershipNumber(request.membershipNumber().trim()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+
+                Book book = bookRepository.findByBookCode(request.bookCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+
+                oldLoan = loanRepository.findFirstByMember_IdAndBook_IdOrderByIdDesc(member.getId(), book.getId()).orElseThrow(() -> new ResourceNotFoundException("Current loan not found"));
+            }
+
+            returnTransaction.setMember(oldLoan.getMember());
+            returnTransaction.setBook(oldLoan.getBook());
+
+            if (oldLoan.getStatus() != Enums.LoanStatus.SUCCESS) {
+
+                throw new BusinessException("This loan transaction is not successful");
+            }
+
+            if (oldLoan.getReturnDate() != null) {
+
+                throw new BusinessException("Book already returned");
+            }
+
+            if (oldLoan.getType() == Enums.LoanType.RETURN) {
+
+                throw new BusinessException("This transaction is already a return transaction");
+            }
+
+            if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
+
+                throw new BusinessException("This loan is no longer the current transaction. Use the latest tracking code.");
+            }
+
+            returnTransaction.setParentTransaction(oldLoan);
+
+            LocalDateTime now = LocalDateTime.now();
+
+            returnTransaction.setStatus(Enums.LoanStatus.SUCCESS);
+
+            returnTransaction.setRequestDate(now);
+
+            returnTransaction.setDueDate(oldLoan.getDueDate());
+
+            returnTransaction.setReturnDate(now);
+
+            returnTransaction.setRenewCount(oldLoan.getRenewCount());
+
+            Book book = oldLoan.getBook();
+
+            book.setAvailableCopies(book.getAvailableCopies() + 1);
+
+            bookRepository.save(book);
+
+            LoanTransaction savedReturn = loanRepository.save(returnTransaction);
+
+            Fine fine = createFineIfNeeded(savedReturn);
+
+            eventLogger.info("LOAN_RETURN_SUCCESS", SecurityUtils.getCurrentUsername(), "loanId=" + savedReturn.getId() + " parentLoanId=" + oldLoan.getId() + " memberId=" + savedReturn.getMember().getId() + " bookId=" + savedReturn.getBook().getId() + " trackingCode=" + savedReturn.getTrackingCode() + " overdue=" + (fine != null) + " fineId=" + (fine == null ? "none" : fine.getId()));
+
+            return mapToResponse(savedReturn);
+
+        } catch (RuntimeException ex) {
+
+            return failTransaction(returnTransaction, ex);
         }
-
-        if (oldLoan.getReturnDate() != null) {
-            throw new BusinessException("Book already returned");
-        }
-
-        if (oldLoan.getType() == Enums.LoanType.RETURN) {
-            throw new BusinessException("This transaction is already a return transaction");
-        }
-
-        if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
-            throw new BusinessException("This loan is no longer the current transaction. Use the latest tracking code.");
-        }
-
-        LoanTransaction returnTransaction = new LoanTransaction();
-        returnTransaction.setMember(oldLoan.getMember());
-        returnTransaction.setBook(oldLoan.getBook());
-        returnTransaction.setCreatedBy(getCurrentUser());
-        returnTransaction.setType(Enums.LoanType.RETURN);
-        returnTransaction.setStatus(Enums.LoanStatus.SUCCESS);
-        returnTransaction.setParentTransaction(oldLoan);
-        returnTransaction.setTrackingCode(generateTrackingCode());
-
-        LocalDateTime now = LocalDateTime.now();
-        returnTransaction.setRequestDate(now);
-        returnTransaction.setDueDate(oldLoan.getDueDate());
-        returnTransaction.setReturnDate(now);
-        returnTransaction.setRenewCount(oldLoan.getRenewCount());
-
-        Book book = oldLoan.getBook();
-        book.setAvailableCopies(book.getAvailableCopies() + 1);
-        bookRepository.save(book);
-
-        LoanTransaction savedReturn = loanRepository.save(returnTransaction);
-        Fine fine = createFineIfNeeded(savedReturn);
-
-        eventLogger.info(
-                "LOAN_RETURN_SUCCESS",
-                SecurityUtils.getCurrentUsername(),
-                "loanId=" + savedReturn.getId()
-                        + " parentLoanId=" + oldLoan.getId()
-                        + " memberId=" + savedReturn.getMember().getId()
-                        + " bookId=" + savedReturn.getBook().getId()
-                        + " trackingCode=" + savedReturn.getTrackingCode()
-                        + " overdue=" + (fine != null)
-                        + " fineId=" + (fine == null ? "none" : fine.getId())
-        );
-
-        return mapToResponse(savedReturn);
     }
 
     @Override
     @Transactional
     public LoanResponse renewLoan(RenewRequest request) {
-        LoanTransaction oldLoan = loanRepository.findByTrackingCode(request.trackingCode())
-                .orElseThrow(() -> new BusinessException("Loan not found"));
 
-        if (oldLoan.getReturnDate() != null) {
-            throw new BusinessException("Book already returned");
+        LoanTransaction renew = createPendingTransaction(Enums.LoanType.RENEW);
+
+        try {
+
+            LoanTransaction oldLoan = loanRepository.findByTrackingCode(request.trackingCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
+
+            renew.setMember(oldLoan.getMember());
+            renew.setBook(oldLoan.getBook());
+
+            if (oldLoan.getStatus() != Enums.LoanStatus.SUCCESS) {
+
+                throw new BusinessException("This loan transaction is not successful");
+            }
+
+            if (oldLoan.getReturnDate() != null) {
+
+                throw new BusinessException("Book already returned");
+            }
+
+            if (oldLoan.getType() == Enums.LoanType.RETURN) {
+
+                throw new BusinessException("A returned transaction cannot be renewed");
+            }
+
+            if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
+
+                throw new BusinessException("This loan is no longer the current transaction. Use the latest tracking code.");
+            }
+
+            if (oldLoan.getRenewCount() >= properties.getMaxRenewCount()) {
+
+                throw new BusinessException("Maximum renew limit reached");
+            }
+            loanValidator.validateMember(oldLoan.getMember());
+            loanValidator.validateBook(oldLoan.getBook());
+
+            renew.setParentTransaction(oldLoan);
+
+            renew.setRenewCount(oldLoan.getRenewCount() + 1);
+
+            LocalDateTime now = LocalDateTime.now();
+
+            renew.setStatus(Enums.LoanStatus.SUCCESS);
+
+            renew.setRequestDate(now);
+
+            renew.setDueDate(oldLoan.getDueDate().plusDays(properties.getLoanPeriodDays()));
+
+            LoanTransaction saved = loanRepository.save(renew);
+
+            eventLogger.info("LOAN_RENEW_SUCCESS", SecurityUtils.getCurrentUsername(), "loanId=" + saved.getId() + " parentLoanId=" + oldLoan.getId() + " memberId=" + saved.getMember().getId() + " bookId=" + saved.getBook().getId() + " trackingCode=" + saved.getTrackingCode() + " renewCount=" + saved.getRenewCount());
+
+            return mapToResponse(saved);
+
+        } catch (RuntimeException ex) {
+
+            return failTransaction(renew, ex);
         }
-
-        if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
-            throw new BusinessException("This loan is no longer the current transaction. Use the latest tracking code.");
-        }
-
-        if (oldLoan.getRenewCount() >= properties.getMaxRenewCount()) {
-            throw new BusinessException("Maximum renew limit reached");
-        }
-
-        LoanTransaction renew = new LoanTransaction();
-        renew.setMember(oldLoan.getMember());
-        renew.setBook(oldLoan.getBook());
-        renew.setCreatedBy(getCurrentUser());
-        renew.setType(Enums.LoanType.RENEW);
-        renew.setStatus(Enums.LoanStatus.SUCCESS);
-        renew.setParentTransaction(oldLoan);
-        renew.setRenewCount(oldLoan.getRenewCount() + 1);
-
-        LocalDateTime now = LocalDateTime.now();
-        renew.setRequestDate(now);
-        renew.setDueDate(oldLoan.getDueDate().plusDays(properties.getLoanPeriodDays()));
-        renew.setTrackingCode(generateTrackingCode());
-
-        LoanTransaction saved = loanRepository.save(renew);
-
-        eventLogger.info(
-                "LOAN_RENEW_SUCCESS",
-                SecurityUtils.getCurrentUsername(),
-                "loanId=" + saved.getId()
-                        + " parentLoanId=" + oldLoan.getId()
-                        + " memberId=" + saved.getMember().getId()
-                        + " bookId=" + saved.getBook().getId()
-                        + " trackingCode=" + saved.getTrackingCode()
-                        + " renewCount=" + saved.getRenewCount()
-        );
-
-        return mapToResponse(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public LoanResponse getLoanStatus(String trackingCode) {
+
         if (trackingCode == null || trackingCode.isBlank()) {
+
             throw new BusinessException("Tracking code is required");
         }
 
-        LoanTransaction loan = loanRepository.findByTrackingCode(trackingCode.trim())
-                .orElseThrow(() -> new ResourceNotFoundException("Tracking code not found"));
+        LoanTransaction loan = loanRepository.findByTrackingCode(trackingCode.trim()).orElseThrow(() -> new ResourceNotFoundException("Tracking code not found"));
 
-        eventLogger.info(
-                "LOAN_STATUS_VIEW",
-                SecurityUtils.getCurrentUsername(),
-                "loanId=" + loan.getId() + " trackingCode=" + loan.getTrackingCode()
-        );
+        eventLogger.info("LOAN_STATUS_VIEW", SecurityUtils.getCurrentUsername(), "loanId=" + loan.getId() + " trackingCode=" + loan.getTrackingCode());
 
         return mapToResponse(loan);
     }
 
+    private LoanTransaction createPendingTransaction(Enums.LoanType type) {
+
+        LoanTransaction transaction = new LoanTransaction();
+
+        transaction.setType(type);
+
+        transaction.setStatus(Enums.LoanStatus.PENDING);
+
+        transaction.setTrackingCode(generateTrackingCode());
+
+        transaction.setRequestDate(LocalDateTime.now());
+
+        transaction.setRenewCount(0);
+
+        transaction.setCreatedBy(getCurrentUser());
+
+        return loanRepository.save(transaction);
+    }
+
+    private LoanResponse failTransaction(LoanTransaction transaction, RuntimeException ex) {
+
+        transaction.setStatus(Enums.LoanStatus.FAILED);
+
+        transaction.setErrorMessage(ex.getMessage() != null ? ex.getMessage() : "Transaction failed");
+
+        LoanTransaction failed = loanRepository.save(transaction);
+
+        eventLogger.info("LOAN_TRANSACTION_FAILED", SecurityUtils.getCurrentUsername(), "loanId=" + failed.getId() + " type=" + failed.getType() + " trackingCode=" + failed.getTrackingCode() + " error=" + failed.getErrorMessage());
+
+        return mapToResponse(failed);
+    }
+
     private String generateTrackingCode() {
+
         return UUID.randomUUID().toString();
     }
 
     private AppUser getCurrentUser() {
-        return appUserRepository.findByUsername(SecurityUtils.getCurrentUsername())
-                .orElseThrow(() -> new BusinessException("User not found"));
+
+        return appUserRepository.findByUsername(SecurityUtils.getCurrentUsername()).orElseThrow(() -> new BusinessException("User not found"));
     }
 
     private LoanResponse mapToResponse(LoanTransaction loan) {
-        return new LoanResponse(
-                loan.getId(),
-                loan.getTrackingCode(),
-                loan.getMember().getMembershipNumber(),
-                loan.getBook().getBookCode(),
-                loan.getType(),
-                loan.getStatus(),
-                loan.getRequestDate(),
-                loan.getDueDate(),
-                loan.getReturnDate(),
-                loan.getRenewCount()
-        );
+
+        return new LoanResponse(loan.getId(), loan.getTrackingCode(), loan.getMember() == null ? null : loan.getMember().getMembershipNumber(), loan.getBook() == null ? null : loan.getBook().getBookCode(), loan.getType(), loan.getStatus(), loan.getRequestDate(), loan.getDueDate(), loan.getReturnDate(), loan.getRenewCount(), loan.getErrorMessage());
     }
 
     private Fine createFineIfNeeded(LoanTransaction loan) {
+
         if (fineRepository.findByLoanTransactionId(loan.getId()).isPresent()) {
+
             return null;
         }
 
         if (!loan.getReturnDate().isAfter(loan.getDueDate())) {
+
             return null;
         }
 
-        long lateDays = java.time.Duration.between(
-                loan.getDueDate(),
-                loan.getReturnDate()
-        ).toDays();
+        long lateDays = java.time.Duration.between(loan.getDueDate(), loan.getReturnDate()).toDays();
 
-        BigDecimal amount = BigDecimal.valueOf(
-                Math.min(
-                        lateDays * properties.getFinePerDay(),
-                        properties.getMaxFine()
-                )
-        );
+        BigDecimal amount = BigDecimal.valueOf(Math.min(lateDays * properties.getFinePerDay(), properties.getMaxFine()));
 
         Fine fine = new Fine();
+
         fine.setLoanTransaction(loan);
+
         fine.setAmount(amount);
+
         fine.setStatus(Enums.FineStatus.UNPAID);
+
         fine.setCreatedAt(LocalDateTime.now());
+
         fine.setPaidAmount(BigDecimal.ZERO);
 
         Fine savedFine = fineRepository.save(fine);
 
-        eventLogger.info(
-                "FINE_CREATE_SUCCESS",
-                SecurityUtils.getCurrentUsername(),
-                "fineId=" + savedFine.getId()
-                        + " loanId=" + loan.getId()
-                        + " lateDays=" + lateDays
-                        + " amount=" + amount
-        );
+        eventLogger.info("FINE_CREATE_SUCCESS", SecurityUtils.getCurrentUsername(), "fineId=" + savedFine.getId() + " loanId=" + loan.getId() + " lateDays=" + lateDays + " amount=" + amount);
 
         return savedFine;
     }

@@ -19,5 +19,6 @@ public class LibraryProperties {
     private int loanPeriodDays;
     private long finePerDay;
     private long maxFine;
+    private int maxOverdueDays;
 
 }
