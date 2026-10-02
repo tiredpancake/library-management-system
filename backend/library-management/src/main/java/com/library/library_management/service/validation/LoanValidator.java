@@ -27,14 +27,21 @@ public class LoanValidator {
         }
     }
 
-    public void validateBook(Book book) {
+    public void validateBookActive(Book book) {
         if (book.getStatus() != Enums.BookStatus.ACTIVE) {
             throw new BusinessException("Book is not active");
         }
+    }
 
+    public void validateBookAvailable(Book book) {
         if (book.getAvailableCopies() <= 0) {
             throw new BusinessException("Book is not available");
         }
+    }
+
+    public void validateBook(Book book) {
+        validateBookActive(book);
+        validateBookAvailable(book);
     }
 
     public void validateLoanLimit(Member member) {
