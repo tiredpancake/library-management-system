@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -23,39 +24,73 @@ public class LoanHistoryServiceImpl implements LoanHistoryService {
     private final LibraryProperties properties;
 
     @Override
-    public Page<LoanHistoryResponse> searchHistory(String membershipNumber, String bookCode, Enums.LoanType type, Enums.LoanStatus status, Enums.LoanState state, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<LoanHistoryResponse> searchHistory(
+            String membershipNumber,
+            String bookCode,
+            Enums.LoanType type,
+            Enums.LoanStatus status,
+            Enums.LoanState state,
+            LocalDateTime from,
+            LocalDateTime to,
+            Pageable pageable
+    ) {
 
-        Specification<LoanTransaction> specification = (root, query, cb) -> cb.conjunction();
+        Specification<LoanTransaction> specification =
+                (root, query, cb) -> cb.conjunction();
 
         if (membershipNumber != null && !membershipNumber.isBlank()) {
-            specification = specification.and(LoanSpecification.hasMember(membershipNumber));
+            specification =
+                    specification.and(
+                            LoanSpecification.hasMember(membershipNumber)
+                    );
         }
 
         if (bookCode != null && !bookCode.isBlank()) {
-            specification = specification.and(LoanSpecification.hasBook(bookCode));
+            specification =
+                    specification.and(
+                            LoanSpecification.hasBook(bookCode)
+                    );
         }
 
         if (type != null) {
-            specification = specification.and(LoanSpecification.hasType(type));
+            specification =
+                    specification.and(
+                            LoanSpecification.hasType(type)
+                    );
         }
 
         if (status != null) {
-            specification = specification.and(LoanSpecification.hasStatus(status));
+            specification =
+                    specification.and(
+                            LoanSpecification.hasStatus(status)
+                    );
         }
 
         if (state != null) {
-            specification = specification.and(LoanSpecification.hasState(state));
+            specification =
+                    specification.and(
+                            LoanSpecification.hasState(state)
+                    );
         }
 
         if (from != null) {
-            specification = specification.and(LoanSpecification.dateFrom(from));
+            specification =
+                    specification.and(
+                            LoanSpecification.dateFrom(from)
+                    );
         }
 
         if (to != null) {
-            specification = specification.and(LoanSpecification.dateTo(to));
+            specification =
+                    specification.and(
+                            LoanSpecification.dateTo(to)
+                    );
         }
 
-        return loanRepository.findAll(specification, pageable).map(this::mapToResponse);
+        return loanRepository
+                .findAll(specification, pageable)
+                .map(this::mapToResponse);
     }
 
     private LoanHistoryResponse mapToResponse(LoanTransaction loan) {
@@ -70,6 +105,10 @@ public class LoanHistoryServiceImpl implements LoanHistoryService {
 
         boolean canRenew = current && loan.getRenewCount() != null && loan.getRenewCount() < properties.getMaxRenewCount();
 
-        return new LoanHistoryResponse(loan.getId(), parentTransactionId, loan.getTrackingCode(), loan.getMember().getMembershipNumber(), loan.getBook().getBookCode(), loan.getType(), loan.getStatus(), loan.getRequestDate(), loan.getDueDate(), loan.getReturnDate(), loan.getRenewCount(), current, canReturn, canRenew);
+        String membershipNumber = loan.getMember() != null ? loan.getMember().getMembershipNumber() : null;
+
+        String bookCode = loan.getBook() != null ? loan.getBook().getBookCode() : null;
+
+        return new LoanHistoryResponse(loan.getId(), parentTransactionId, loan.getTrackingCode(), membershipNumber, bookCode, loan.getType(), loan.getStatus(), loan.getRequestDate(), loan.getDueDate(), loan.getReturnDate(), loan.getRenewCount(), current, canReturn, canRenew);
     }
 }

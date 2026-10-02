@@ -2,8 +2,10 @@ package com.library.library_management.repository;
 
 import com.library.library_management.entity.Enums;
 import com.library.library_management.entity.LoanTransaction;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -127,9 +129,29 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
     }
 
 
-    long countByMemberIdAndReturnDateIsNull(Long memberId);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT l
+        FROM LoanTransaction l
+        WHERE l.trackingCode = :trackingCode
+        """)
+    Optional<LoanTransaction> findByTrackingCodeForUpdate(
+            @Param("trackingCode") String trackingCode
+    );
 
-    boolean existsByMemberIdAndReturnDateIsNullAndDueDateBefore(Long memberId, LocalDateTime date);
-
-    long countByReturnDateIsNull();
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT l
+        FROM LoanTransaction l
+        WHERE l.id = (
+            SELECT MAX(l2.id)
+            FROM LoanTransaction l2
+            WHERE l2.member.id = :memberId
+              AND l2.book.id = :bookId
+        )
+        """)
+    Optional<LoanTransaction> findLatestByMemberAndBookForUpdate(
+            @Param("memberId") Long memberId,
+            @Param("bookId") Long bookId
+    );
 }

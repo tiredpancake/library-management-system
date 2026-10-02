@@ -13,23 +13,14 @@ public interface LoanHistoryService {
 
 
     Page<LoanHistoryResponse> searchHistory(
-
             String membershipNumber,
-
             String bookCode,
-
             Enums.LoanType type,
-
             Enums.LoanStatus status,
-
             Enums.LoanState state,
-
             LocalDateTime from,
-
             LocalDateTime to,
-
             Pageable pageable
-
     );
 
 }

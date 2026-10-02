@@ -65,11 +65,12 @@ public class Book {
     private Long version;
 
     @PrePersist
-    public void prePersist(){
-        if(createdAt == null){
+    public void prePersist() {
+        if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
-        if(status == null){
+
+        if (status == null) {
             status = Enums.BookStatus.ACTIVE;
         }
     }
