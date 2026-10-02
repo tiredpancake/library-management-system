@@ -20,7 +20,9 @@ public record CreateBookRequest(
 
         @NotNull(message = "Publish year is required") Integer publishYear,
 
-        @NotNull Integer totalCopies,
+        @NotNull
+        @PositiveOrZero(message = "Total copies cannot be negative")
+        Integer totalCopies,
 
         @PositiveOrZero(message = "Price cannot be negative") BigDecimal price
 
