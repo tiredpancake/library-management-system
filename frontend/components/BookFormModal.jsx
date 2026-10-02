@@ -161,8 +161,6 @@ flex
 flex-col
 "
       >
-        {/* Header */}
-
         <div
           className="
 p-6
@@ -190,8 +188,6 @@ mt-3
             </p>
           )}
         </div>
-
-        {/* Body */}
 
         <div
           className="
@@ -308,8 +304,6 @@ py-2
             </div>
           </form>
         </div>
-
-        {/* Footer */}
 
         <div
           className="

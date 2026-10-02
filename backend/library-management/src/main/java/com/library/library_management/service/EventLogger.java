@@ -4,10 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-/**
- * Application-level event logger used for important business operations.
- * Sensitive credentials and tokens must never be passed to this logger.
- */
 @Component
 public class EventLogger {
 

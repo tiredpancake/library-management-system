@@ -31,8 +31,6 @@ function BookDetailsModal({ book, onClose }) {
         flex-col
         "
       >
-        {/* Header */}
-
         <div
           className="
           p-6
@@ -48,8 +46,6 @@ function BookDetailsModal({ book, onClose }) {
             Book Details
           </h2>
         </div>
-
-        {/* Content */}
 
         <div
           className="
@@ -96,8 +92,6 @@ function BookDetailsModal({ book, onClose }) {
             }
           />
         </div>
-
-        {/* Footer */}
 
         <div
           className="

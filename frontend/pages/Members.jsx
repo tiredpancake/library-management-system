@@ -141,8 +141,6 @@ function Members() {
 
   return (
     <div>
-      {/* Header */}
-
       <div className="flex justify-between mb-6">
         <h1 className="text-2xl font-bold">Members</h1>
 
@@ -164,8 +162,6 @@ function Members() {
           Add Member
         </button>
       </div>
-
-      {/* Search */}
 
       <div
         className="
@@ -190,8 +186,6 @@ function Members() {
           gap-4
           "
         >
-          {/* Membership Number Search */}
-
           <div>
             <label className="block text-sm font-medium mb-1">
               Membership Number
@@ -236,8 +230,6 @@ function Members() {
               </button>
             </div>
           </div>
-
-          {/* National Code Search */}
 
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -285,13 +277,9 @@ function Members() {
           </div>
         </div>
 
-        {/* Search Error */}
-
         {searchError && (
           <div className="mt-4 text-sm text-red-600">{searchError}</div>
         )}
-
-        {/* Clear Search */}
 
         {(searchMembershipNumber || searchNationalCode) && (
           <button
@@ -312,8 +300,6 @@ function Members() {
           </button>
         )}
       </div>
-
-      {/* Members Table */}
 
       <div
         className="
@@ -366,8 +352,6 @@ function Members() {
                     gap-4
                     "
                   >
-                    {/* View */}
-
                     <button
                       type="button"
                       onClick={() => {
@@ -384,8 +368,6 @@ function Members() {
                       <Eye size={17} />
                       View
                     </button>
-
-                    {/* Edit */}
 
                     <button
                       type="button"
@@ -426,16 +408,12 @@ function Members() {
         </table>
       </div>
 
-      {/* Add / Edit Member Modal */}
-
       <MemberFormModal
         open={open}
         onClose={closeForm}
         onSubmit={save}
         member={editMember}
       />
-
-      {/* View Member Modal */}
 
       <MemberViewModal
         open={Boolean(viewMember)}

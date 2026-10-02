@@ -106,8 +106,6 @@ function LoanStatusModal({ open, onClose, onSubmit }) {
         flex-col
         "
       >
-        {/* Header */}
-
         <div
           className="
           p-6
@@ -123,8 +121,6 @@ function LoanStatusModal({ open, onClose, onSubmit }) {
             Check Loan Status
           </h2>
         </div>
-
-        {/* Scrollable Content */}
 
         <div
           className="
@@ -184,8 +180,6 @@ function LoanStatusModal({ open, onClose, onSubmit }) {
             </div>
           </form>
 
-          {/* Result */}
-
           {result && (
             <div
               className="
@@ -235,8 +229,6 @@ function LoanStatusModal({ open, onClose, onSubmit }) {
             </div>
           )}
         </div>
-
-        {/* Footer */}
 
         <div
           className="

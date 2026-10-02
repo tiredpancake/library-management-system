@@ -107,8 +107,6 @@ function Books() {
 
   return (
     <div>
-      {/* Header */}
-
       <div
         className="
         flex
@@ -146,8 +144,6 @@ function Books() {
         </button>
       </div>
 
-      {/* General Error */}
-
       {error && (
         <div
           className="
@@ -163,8 +159,6 @@ function Books() {
           {error}
         </div>
       )}
-
-      {/* Search */}
 
       <div
         className="
@@ -243,8 +237,6 @@ function Books() {
           </button>
         )}
       </div>
-
-      {/* Books Table */}
 
       <div
         className="
@@ -325,8 +317,6 @@ function Books() {
         </table>
       </div>
 
-      {/* Add / Edit Book */}
-
       <BookFormModal
         open={open}
         book={selected}
@@ -336,8 +326,6 @@ function Books() {
         }}
         onSubmit={saveBook}
       />
-
-      {/* Book Details */}
 
       <BookDetailsModal
         book={selectedDetails}

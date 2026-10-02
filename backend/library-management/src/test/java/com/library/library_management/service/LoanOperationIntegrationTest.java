@@ -494,7 +494,6 @@ class LoanOperationIntegrationTest {
         Member member = createMember();
         Book book = createBook(1, 1);
 
-        // 1) BORROW
         LoanResponse borrow = loanService.borrowBook(
                 new BorrowRequest(
                         member.getMembershipNumber(),
@@ -523,7 +522,6 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 2) FIRST RENEW
         LoanResponse renew1 = loanService.renewLoan(
                 new RenewRequest(
                         borrow.trackingCode()
@@ -546,7 +544,6 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 3) OLD BORROW MUST NO LONGER BE CURRENT
         LoanResponse oldBorrowRenewAttempt =
                 loanService.renewLoan(
                         new RenewRequest(
@@ -560,7 +557,7 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 4) SECOND RENEW
+
         LoanResponse renew2 = loanService.renewLoan(
                 new RenewRequest(
                         renew1.trackingCode()
@@ -583,7 +580,6 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 5) MAX RENEW SHOULD BE ENFORCED
         LoanResponse thirdRenewAttempt =
                 loanService.renewLoan(
                         new RenewRequest(
@@ -602,7 +598,6 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 6) RETURN CURRENT LOAN
         LoanResponse returned =
                 loanService.returnBook(
                         new ReturnRequest(
@@ -627,7 +622,7 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 7) INVENTORY MUST BE RESTORED
+
         Book afterReturn =
                 bookRepository.findById(book.getId()).orElseThrow();
 
@@ -637,7 +632,6 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 8) RETURNED TRANSACTION CANNOT BE RETURNED AGAIN
         LoanResponse secondReturnAttempt =
                 loanService.returnBook(
                         new ReturnRequest(
@@ -653,7 +647,7 @@ class LoanOperationIntegrationTest {
         );
 
 
-        // 9) RETURNED TRANSACTION CANNOT BE RENEWED
+
         LoanResponse renewAfterReturn =
                 loanService.renewLoan(
                         new RenewRequest(

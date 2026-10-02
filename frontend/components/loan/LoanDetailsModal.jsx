@@ -36,8 +36,6 @@ function LoanDetailsModal({ open, loan, onClose }) {
         flex-col
         "
       >
-        {/* Header */}
-
         <div
           className="
           p-6
@@ -53,8 +51,6 @@ function LoanDetailsModal({ open, loan, onClose }) {
             Loan Details
           </h2>
         </div>
-
-        {/* Scrollable Content */}
 
         <div
           className="
@@ -81,8 +77,6 @@ function LoanDetailsModal({ open, loan, onClose }) {
 
           <Detail label="Renew Count" value={loan.renewCount} />
         </div>
-
-        {/* Footer */}
 
         <div
           className="

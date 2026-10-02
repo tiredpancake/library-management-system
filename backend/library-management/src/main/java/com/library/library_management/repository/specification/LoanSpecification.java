@@ -26,7 +26,6 @@ public class LoanSpecification {
 
     public static Specification<LoanTransaction> hasState(Enums.LoanState state) {
 
-        // No state filter was requested.
         if (state == null) {
             return null;
         }

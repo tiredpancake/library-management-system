@@ -28,8 +28,6 @@ function MemberDetailsModal({ member, onClose }) {
                 flex-col
                 "
       >
-        {/* Header */}
-
         <div
           className="
                     p-6
@@ -45,8 +43,6 @@ function MemberDetailsModal({ member, onClose }) {
             Member Details
           </h2>
         </div>
-
-        {/* Content with scroll */}
 
         <div
           className="
@@ -82,8 +78,6 @@ function MemberDetailsModal({ member, onClose }) {
             }
           />
         </div>
-
-        {/* Footer */}
 
         <div
           className="

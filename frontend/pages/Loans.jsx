@@ -157,8 +157,6 @@ function Loans() {
       from: "",
       to: "",
     });
-    // Initial load only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateFilter = (field, value) => {
