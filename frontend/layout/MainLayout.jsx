@@ -13,8 +13,10 @@ bg-slate-100
 
       <main
         className="
+min-w-0
 flex-1
 p-8
+overflow-x-hidden
 "
       >
         {children}

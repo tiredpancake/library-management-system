@@ -36,7 +36,7 @@ public class BookServiceImpl implements BookService {
         }
         if (request.publishYear() < 1000 || request.publishYear() > LocalDateTime.now().getYear()) {
 
-            throw new BusinessException("Invalid publish year");
+            throw new BusinessException("publishYear", "Invalid publish year");
         }
         Book book = new Book();
         book.setIsbn(request.isbn());
@@ -55,13 +55,11 @@ public class BookServiceImpl implements BookService {
         Book savedBook = bookRepository.save(book);
         return mapToResponse(savedBook);
     }
+
     @Override
     public BookResponse getById(Long id) {
 
-        Book book = bookRepository.findById(id)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Book not found")
-                );
+        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
         return mapToResponse(book);
     }
@@ -117,7 +115,7 @@ public class BookServiceImpl implements BookService {
         if (request.publishYear() != null) {
             if (request.publishYear() < 1000 || request.publishYear() > LocalDateTime.now().getYear()) {
 
-                throw new BusinessException("Invalid publish year");
+                throw new BusinessException("publishYear", "Invalid publish year");
             }
             book.setPublishYear(request.publishYear());
         }
@@ -173,9 +171,7 @@ public class BookServiceImpl implements BookService {
 
     private BookResponse mapToResponse(Book book) {
 
-        return new BookResponse(book.getId(), book.getBookCode(), book.getIsbn(), book.getTitle(), book.getAuthor(), book.getCategory(), book.getPublisher(), book.getPublishYear(), book.getTotalCopies(), book.getAvailableCopies(),
-                book.getTotalCopies() - book.getAvailableCopies(),
-                book.getPrice(), book.getStatus(), book.getCreatedAt(), book.getUpdatedAt());
+        return new BookResponse(book.getId(), book.getBookCode(), book.getIsbn(), book.getTitle(), book.getAuthor(), book.getCategory(), book.getPublisher(), book.getPublishYear(), book.getTotalCopies(), book.getAvailableCopies(), book.getTotalCopies() - book.getAvailableCopies(), book.getPrice(), book.getStatus(), book.getCreatedAt(), book.getUpdatedAt());
     }
 
 }

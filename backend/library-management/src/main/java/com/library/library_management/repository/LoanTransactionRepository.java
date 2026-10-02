@@ -61,15 +61,7 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     long countCurrentActiveLoans(@Param("memberId") Long memberId, @Param("status") Enums.LoanStatus status, @Param("activeTypes") List<Enums.LoanType> activeTypes);
 
-    /*
-     * Compatibility method used by LoanValidator.
-     *
-     * Counts only the member's CURRENT active loans.
-     * BORROW/RENEW are considered active transaction types.
-     *
-     * If a transaction has a child transaction (for example RENEW
-     * or RETURN), that old transaction is not counted as current.
-     */
+
     default long countCurrentActiveLoansByMemberId(Long memberId) {
 
         return countCurrentActiveLoans(memberId, Enums.LoanStatus.SUCCESS, List.of(Enums.LoanType.BORROW, Enums.LoanType.RENEW));
@@ -93,12 +85,7 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     boolean existsCurrentOverdueLoan(@Param("memberId") Long memberId, @Param("status") Enums.LoanStatus status, @Param("activeTypes") List<Enums.LoanType> activeTypes, @Param("date") LocalDateTime date);
 
-    /*
-     * Counts CURRENT overdue loans for one member.
-     *
-     * This is separate from existsCurrentOverdueLoan because
-     * LoanValidator needs the actual number.
-     */
+
     @Query("""
             SELECT COUNT(l)
             FROM LoanTransaction l
@@ -114,9 +101,7 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     long countCurrentOverdueLoans(@Param("memberId") Long memberId, @Param("status") Enums.LoanStatus status, @Param("activeTypes") List<Enums.LoanType> activeTypes, @Param("date") LocalDateTime date);
 
-    /*
-     * Compatibility method used by LoanValidator.
-     */
+
     default long countCurrentOverdueLoansByMemberId(Long memberId, LocalDateTime date) {
 
         return countCurrentOverdueLoans(memberId, Enums.LoanStatus.SUCCESS, List.of(Enums.LoanType.BORROW, Enums.LoanType.RENEW), date);
@@ -135,20 +120,13 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             """)
     long countCurrentActiveLoans(@Param("status") Enums.LoanStatus status, @Param("activeTypes") List<Enums.LoanType> activeTypes);
 
-    /*
-     * Compatibility method used by DashboardController.
-     *
-     * Dashboard asks for the total number of current active loans
-     * without supplying filters.
-     */
+
     default long countCurrentActiveLoans() {
 
         return countCurrentActiveLoans(Enums.LoanStatus.SUCCESS, List.of(Enums.LoanType.BORROW, Enums.LoanType.RENEW));
     }
 
-    /*
-     * Older/simple counting methods kept unchanged.
-     */
+
     long countByMemberIdAndReturnDateIsNull(Long memberId);
 
     boolean existsByMemberIdAndReturnDateIsNullAndDueDateBefore(Long memberId, LocalDateTime date);

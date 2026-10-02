@@ -35,10 +35,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     public MemberResponse createMember(CreateMemberRequest request) {
         if (memberRepository.existsByNationalCode(request.nationalCode())) {
-            throw new DuplicateResourceException(
-                    "nationalCode",
-                    "National code already exists"
-            );
+            throw new DuplicateResourceException("nationalCode", "National code already exists");
         }
 
         Member member = new Member();
@@ -109,10 +106,7 @@ public class MemberServiceImpl implements MemberService {
         if (request.nationalCode() != null && !member.getNationalCode().equals(request.nationalCode())) {
             if (memberRepository.existsByNationalCode(request.nationalCode())) {
 
-                throw new DuplicateResourceException(
-                        "nationalCode",
-                        "National code already exists"
-                );
+                throw new DuplicateResourceException("nationalCode", "National code already exists");
             }
             saveHistory(member, "nationalCode", member.getNationalCode(), request.nationalCode());
 
@@ -173,17 +167,7 @@ public class MemberServiceImpl implements MemberService {
 
         return new MemberResponse(
 
-                member.getId(),
-                member.getMembershipNumber(),
-                member.getFullName(),
-                member.getNationalCode(),
-                member.getBirthDate(),
-                member.getMembershipType(),
-                member.getPhone(),
-                member.getAddress(),
-                member.getPostalCode(),
-                member.getStatus(),
-                member.getCreatedAt()
+                member.getId(), member.getMembershipNumber(), member.getFullName(), member.getNationalCode(), member.getBirthDate(), member.getMembershipType(), member.getPhone(), member.getAddress(), member.getPostalCode(), member.getStatus(), member.getCreatedAt(), member.getUpdatedAt()
 
         );
 

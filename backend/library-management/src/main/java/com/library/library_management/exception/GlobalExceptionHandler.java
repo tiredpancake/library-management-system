@@ -2,17 +2,12 @@ package com.library.library_management.exception;
 
 
 import com.library.library_management.dto.ErrorResponse;
-
-import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 
 import java.time.LocalDateTime;
 
@@ -31,20 +26,9 @@ public class GlobalExceptionHandler {
 
 
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicate(
-            DuplicateResourceException ex
-    ) {
+    public ResponseEntity<ErrorResponse> handleDuplicate(DuplicateResourceException ex) {
 
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(
-                        new ErrorResponse(
-                                ex.getField(),
-                                ex.getMessage(),
-                                409,
-                                LocalDateTime.now()
-                        )
-                );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(ex.getField(), ex.getMessage(), 409, LocalDateTime.now()));
 
     }
 
@@ -83,7 +67,7 @@ public class GlobalExceptionHandler {
 
                 new ErrorResponse(
 
-                        null,
+                        ex.getField(),
 
                         ex.getMessage(),
 

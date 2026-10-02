@@ -1,6 +1,5 @@
 package com.library.library_management.controller;
 
-
 import com.library.library_management.dto.loan.LoanHistoryResponse;
 import com.library.library_management.entity.Enums;
 import com.library.library_management.service.LoanHistoryService;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
-
 @RestController
 @RequestMapping("/api/loans")
 @RequiredArgsConstructor
@@ -27,17 +25,21 @@ public class LoanHistoryController {
     public Page<LoanHistoryResponse> searchHistory(
 
             @RequestParam(required = false) String membershipNumber,
+
             @RequestParam(required = false) String bookCode,
+
             @RequestParam(required = false) Enums.LoanType type,
-            @RequestParam(required = false) Enums.LoanStatus status,
+
+            @RequestParam(required = false) String state,
+
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+
             Pageable pageable
 
     ) {
 
-        return loanHistoryService.searchHistory(
-                membershipNumber, bookCode, type, status, from, to, pageable
-        );
+        return loanHistoryService.searchHistory(membershipNumber, bookCode, type, state, from, to, pageable);
     }
 }

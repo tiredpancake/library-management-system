@@ -4,6 +4,12 @@ import { getFines, payFine } from "../api/fineApi";
 
 import PayFineModal from "../components/PayFineModal";
 
+function formatAmount(value) {
+  const amount = Number(value ?? 0);
+
+  return amount.toLocaleString();
+}
+
 function Fines() {
   const [fines, setFines] = useState([]);
 
@@ -60,14 +66,22 @@ p-5
 overflow-x-auto
 "
       >
-        <table className="w-full">
+        <table className="w-full min-w-[1100px]">
           <thead>
             <tr className="border-b text-left">
-              <th className="p-3">ID</th>
+              <th className="p-3">Fine ID</th>
+
+              <th>Member ID</th>
+
+              <th>Membership Number</th>
 
               <th>Loan ID</th>
 
               <th>Amount</th>
+
+              <th>Paid</th>
+
+              <th>Remaining</th>
 
               <th>Status</th>
 
@@ -80,9 +94,17 @@ overflow-x-auto
               <tr key={fine.id} className="border-b">
                 <td className="p-3">{fine.id}</td>
 
+                <td>{fine.memberId ?? "—"}</td>
+
+                <td>{fine.membershipNumber ?? "—"}</td>
+
                 <td>{fine.loanTransactionId}</td>
 
-                <td>{fine.amount}</td>
+                <td>{formatAmount(fine.amount)}</td>
+
+                <td>{formatAmount(fine.paidAmount)}</td>
+
+                <td>{formatAmount(fine.remainingAmount)}</td>
 
                 <td>{fine.status}</td>
 
@@ -96,12 +118,10 @@ overflow-x-auto
       <PayFineModal
         open={open}
         onClose={() => setOpen(false)}
-        onSubmit={(data) => {
-          payFine(data).then(() => {
-            load();
-
-            setOpen(false);
-          });
+        onSubmit={async (data) => {
+          await payFine(data);
+          await load();
+          setOpen(false);
         }}
       />
     </div>

@@ -8,10 +8,24 @@ import java.time.LocalDateTime;
 public record FineResponse(
 
         Long id,
+
         Long loanTransactionId,
+
+        Long memberId,
+
+        String membershipNumber,
+
         BigDecimal amount,
+
+        BigDecimal paidAmount,
+
+        BigDecimal remainingAmount,
+
         FineStatus status,
+
         LocalDateTime createdAt,
+
         LocalDateTime paidAt
+
 ) {
 }

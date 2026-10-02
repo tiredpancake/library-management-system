@@ -36,7 +36,6 @@ function Landing() {
             bg-slate-50
             "
     >
-      {/* Navbar */}
 
       <nav
         className="
@@ -76,7 +75,6 @@ function Landing() {
         </button>
       </nav>
 
-      {/* Hero */}
 
       <section
         className="
@@ -113,26 +111,8 @@ function Landing() {
           operations in one place.
         </p>
 
-        <button
-          onClick={() => navigate("/login")}
-          className="
-                    mt-8
-                    bg-blue-600
-                    text-white
-                    px-8
-                    py-3
-                    rounded-xl
-                    text-lg
-                    font-semibold
-                    hover:bg-blue-700
-                    transition
-                    "
-        >
-          Get Started
-        </button>
       </section>
 
-      {/* Features */}
 
       <section
         className="
@@ -205,7 +185,6 @@ function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
 
       <footer
         className="

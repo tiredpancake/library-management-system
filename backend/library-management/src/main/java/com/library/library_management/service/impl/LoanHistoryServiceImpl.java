@@ -1,6 +1,6 @@
 package com.library.library_management.service.impl;
 
-
+import com.library.library_management.config.LibraryProperties;
 import com.library.library_management.dto.loan.LoanHistoryResponse;
 import com.library.library_management.entity.Enums;
 import com.library.library_management.entity.LoanTransaction;
@@ -15,49 +15,57 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-
 @Service
 @RequiredArgsConstructor
 public class LoanHistoryServiceImpl implements LoanHistoryService {
 
     private final LoanTransactionRepository loanRepository;
+    private final LibraryProperties properties;
 
     @Override
-    public Page<LoanHistoryResponse> searchHistory(
+    public Page<LoanHistoryResponse> searchHistory(String membershipNumber, String bookCode, Enums.LoanType type, String state, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 
-            String membershipNumber,
-            String bookCode,
-            Enums.LoanType type,
-            Enums.LoanStatus status,
-            LocalDateTime from,
-            LocalDateTime to,
-            Pageable pageable
+        Specification<LoanTransaction> specification = Specification.unrestricted();
 
-    ) {
+        if (membershipNumber != null && !membershipNumber.isBlank()) {
+            specification = specification.and(LoanSpecification.hasMember(membershipNumber));
+        }
 
+        if (bookCode != null && !bookCode.isBlank()) {
+            specification = specification.and(LoanSpecification.hasBook(bookCode));
+        }
 
-        Specification<LoanTransaction> specification = Specification.where(LoanSpecification.hasMember(membershipNumber)).and(LoanSpecification.hasBook(bookCode)).and(LoanSpecification.hasType(type)).and(LoanSpecification.hasStatus(status)).and(LoanSpecification.dateFrom(from)).and(LoanSpecification.dateTo(to));
+        if (type != null) {
+            specification = specification.and(LoanSpecification.hasType(type));
+        }
+
+        if (state != null && !state.isBlank()) {
+            specification = specification.and(LoanSpecification.hasState(state));
+        }
+
+        if (from != null) {
+            specification = specification.and(LoanSpecification.dateFrom(from));
+        }
+
+        if (to != null) {
+            specification = specification.and(LoanSpecification.dateTo(to));
+        }
+
         return loanRepository.findAll(specification, pageable).map(this::mapToResponse);
-
     }
 
     private LoanHistoryResponse mapToResponse(LoanTransaction loan) {
 
+        Long parentTransactionId = loan.getParentTransaction() != null ? loan.getParentTransaction().getId() : null;
 
-        return new LoanHistoryResponse(
+        boolean hasChildTransaction = loanRepository.existsByParentTransactionId(loan.getId());
 
-                loan.getId(),
-                loan.getTrackingCode(),
-                loan.getMember().getMembershipNumber(),
-                loan.getBook().getBookCode(),
-                loan.getType(),
-                loan.getStatus(),
-                loan.getRequestDate(),
-                loan.getDueDate(),
-                loan.getReturnDate()
+        boolean current = loan.getStatus() == Enums.LoanStatus.SUCCESS && loan.getType() != Enums.LoanType.RETURN && loan.getReturnDate() == null && !hasChildTransaction;
 
-        );
+        boolean canReturn = current;
 
+        boolean canRenew = current && loan.getRenewCount() != null && loan.getRenewCount() < properties.getMaxRenewCount();
+
+        return new LoanHistoryResponse(loan.getId(), parentTransactionId, loan.getTrackingCode(), loan.getMember().getMembershipNumber(), loan.getBook().getBookCode(), loan.getType(), loan.getStatus(), loan.getRequestDate(), loan.getDueDate(), loan.getReturnDate(), loan.getRenewCount(), current, canReturn, canRenew);
     }
-
 }

@@ -1,6 +1,5 @@
 package com.library.library_management.dto.loan;
 
-
 import com.library.library_management.entity.Enums;
 
 import java.time.LocalDateTime;
@@ -8,6 +7,7 @@ import java.time.LocalDateTime;
 public record LoanHistoryResponse(
 
         Long id,
+        Long parentTransactionId,
         String trackingCode,
         String membershipNumber,
         String bookCode,
@@ -15,7 +15,11 @@ public record LoanHistoryResponse(
         Enums.LoanStatus status,
         LocalDateTime requestDate,
         LocalDateTime dueDate,
-        LocalDateTime returnDate
+        LocalDateTime returnDate,
+        Integer renewCount,
+        boolean current,
+        boolean canReturn,
+        boolean canRenew
 
 ) {
 }

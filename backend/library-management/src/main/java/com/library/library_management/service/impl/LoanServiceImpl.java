@@ -92,16 +92,27 @@ public class LoanServiceImpl implements LoanService {
     @Transactional
     public LoanResponse returnBook(ReturnRequest request) {
 
-        LoanTransaction oldLoan = loanRepository.findByTrackingCode(request.trackingCode()).orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
+        LoanTransaction oldLoan;
 
+        if (request.trackingCode() != null && !request.trackingCode().isBlank()) {
+            oldLoan = loanRepository.findByTrackingCode(request.trackingCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Loan not found"));
+        } else {
+            Member member = memberRepository.findByMembershipNumber(request.membershipNumber().trim()).orElseThrow(() -> new ResourceNotFoundException("Member not found"));
+
+            Book book = bookRepository.findByBookCode(request.bookCode().trim()).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+
+            oldLoan = loanRepository.findFirstByMember_IdAndBook_IdOrderByIdDesc(member.getId(), book.getId()).orElseThrow(() -> new ResourceNotFoundException("Current loan not found"));
+        }
 
         if (oldLoan.getReturnDate() != null) {
-
             throw new BusinessException("Book already returned");
         }
 
-        if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
+        if (oldLoan.getType() == Enums.LoanType.RETURN) {
+            throw new BusinessException("This transaction is already a return transaction");
+        }
 
+        if (loanRepository.existsByParentTransactionId(oldLoan.getId())) {
             throw new BusinessException("This loan is no longer the current transaction. Use the latest tracking code.");
         }
 

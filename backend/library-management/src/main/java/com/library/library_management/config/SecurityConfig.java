@@ -49,15 +49,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Login
                         .requestMatchers("/api/auth/login").permitAll()
 
-
-                        // Swagger
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
 
-
-                        // Everything else
                         .anyRequest().authenticated())
 
 

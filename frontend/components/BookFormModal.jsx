@@ -88,6 +88,17 @@ function BookFormModal({ open, onClose, onSubmit, book }) {
 
     if (!form.publishYear) {
       e.publishYear = "Publish year is required";
+    } else {
+      const publishYear = Number(form.publishYear);
+      const currentYear = new Date().getFullYear();
+
+      if (
+        !Number.isInteger(publishYear) ||
+        publishYear < 1000 ||
+        publishYear > currentYear
+      ) {
+        e.publishYear = `Publish year must be between 1000 and ${currentYear}`;
+      }
     }
 
     if (!form.totalCopies) {
