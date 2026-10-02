@@ -4,7 +4,7 @@ function Sidebar() {
   const navigate = useNavigate();
 
   const logout = () => {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("basicAuth");
 
     navigate("/login");
   };

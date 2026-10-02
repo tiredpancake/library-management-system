@@ -1,8 +1,12 @@
 import api from "./axios";
 
-export function getLoanHistory(params) {
+export function getLoanHistory(params = {}) {
+  const cleanedParams = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== "" && value !== null && value !== undefined),
+  );
+
   return api.get("/loans/history", {
-    params,
+    params: cleanedParams,
   });
 }
 

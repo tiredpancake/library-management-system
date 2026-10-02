@@ -8,13 +8,14 @@ function ReturnModal({
   trackingCode = "",
   membershipNumber = "",
   bookCode = "",
+  error: serverError = "",
 }) {
   const [form, setForm] = useState({
     membershipNumber: "",
     bookCode: "",
     trackingCode: "",
   });
-  const [error, setError] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -25,7 +26,7 @@ function ReturnModal({
       });
     } else {
       setForm({ membershipNumber: "", bookCode: "", trackingCode: "" });
-      setError("");
+      setValidationError("");
     }
   }, [open, trackingCode, membershipNumber, bookCode]);
 
@@ -36,7 +37,7 @@ function ReturnModal({
       ...current,
       [e.target.name]: e.target.value,
     }));
-    setError("");
+    setValidationError("");
   };
 
   const submit = (e) => {
@@ -47,13 +48,13 @@ function ReturnModal({
     const tracking = form.trackingCode.trim();
 
     if (!tracking && (!membership || !book)) {
-      setError(
+      setValidationError(
         "Enter a tracking code, or enter both membership number and book code.",
       );
       return;
     }
 
-    setError("");
+    setValidationError("");
     onSubmit({
       membershipNumber: membership || null,
       bookCode: book || null,
@@ -92,9 +93,9 @@ function ReturnModal({
             onChange={change}
           />
 
-          {error && (
+          {(validationError || serverError) && (
             <div className="bg-red-100 text-red-700 border border-red-300 p-3 rounded-lg text-sm">
-              {error}
+              {serverError || validationError}
             </div>
           )}
 

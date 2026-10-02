@@ -13,6 +13,7 @@ import com.library.library_management.repository.AppUserRepository;
 import com.library.library_management.repository.BookRepository;
 import com.library.library_management.security.SecurityUtils;
 import com.library.library_management.service.BookService;
+import com.library.library_management.service.EventLogger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,18 +27,18 @@ public class BookServiceImpl implements BookService {
 
     private final BookRepository bookRepository;
     private final AppUserRepository appUserRepository;
+    private final EventLogger eventLogger;
 
     @Override
     @Transactional
     public BookResponse createBook(CreateBookRequest request) {
         if (bookRepository.existsByIsbn(request.isbn())) {
-
             throw new DuplicateResourceException("isbn", "ISBN already exists");
         }
         if (request.publishYear() < 1000 || request.publishYear() > LocalDateTime.now().getYear()) {
-
-            throw new BusinessException("publishYear", "Invalid publish year");
+            throw new BusinessException("Invalid publish year");
         }
+
         Book book = new Book();
         book.setIsbn(request.isbn());
         book.setTitle(request.title());
@@ -52,53 +53,65 @@ public class BookServiceImpl implements BookService {
         book.setStatus(Enums.BookStatus.ACTIVE);
         book.setCreatedAt(LocalDateTime.now());
         book.setCreatedBy(getCurrentUser());
+
         Book savedBook = bookRepository.save(book);
+        eventLogger.info(
+                "BOOK_CREATE_SUCCESS",
+                SecurityUtils.getCurrentUsername(),
+                "bookId=" + savedBook.getId() + " bookCode=" + savedBook.getBookCode()
+        );
         return mapToResponse(savedBook);
     }
 
     @Override
     public BookResponse getById(Long id) {
-
-        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
-
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        eventLogger.info("BOOK_VIEW", SecurityUtils.getCurrentUsername(), "bookId=" + book.getId());
         return mapToResponse(book);
     }
 
-
     @Override
     public BookResponse getByIsbn(String isbn) {
-        Book book = bookRepository.findByIsbn(isbn).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
-
+        Book book = bookRepository.findByIsbn(isbn)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        eventLogger.info("BOOK_VIEW_BY_ISBN", SecurityUtils.getCurrentUsername(), "bookId=" + book.getId());
         return mapToResponse(book);
     }
 
     @Override
     public List<BookResponse> getAllBooks() {
-
-        return bookRepository.findAll().stream().map(this::mapToResponse).toList();
+        List<BookResponse> result = bookRepository.findAll().stream().map(this::mapToResponse).toList();
+        eventLogger.info("BOOK_LIST", SecurityUtils.getCurrentUsername(), "count=" + result.size());
+        return result;
     }
 
     @Override
     @Transactional
     public void deleteBook(Long id) {
-
-        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
         bookRepository.delete(book);
-
+        eventLogger.info(
+                "BOOK_DELETE_SUCCESS",
+                SecurityUtils.getCurrentUsername(),
+                "bookId=" + id + " bookCode=" + book.getBookCode()
+        );
     }
 
     @Override
     public BookResponse getByBookCode(String bookCode) {
-        Book book = bookRepository.findByBookCode(bookCode).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
-
+        Book book = bookRepository.findByBookCode(bookCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        eventLogger.info("BOOK_VIEW_BY_CODE", SecurityUtils.getCurrentUsername(), "bookId=" + book.getId());
         return mapToResponse(book);
     }
 
     @Override
     @Transactional
     public BookResponse updateBook(Long id, UpdateBookRequest request) {
-
-        Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
 
         if (request.title() != null) {
             book.setTitle(request.title());
@@ -114,64 +127,67 @@ public class BookServiceImpl implements BookService {
         }
         if (request.publishYear() != null) {
             if (request.publishYear() < 1000 || request.publishYear() > LocalDateTime.now().getYear()) {
-
-                throw new BusinessException("publishYear", "Invalid publish year");
+                throw new BusinessException("Invalid publish year");
             }
             book.setPublishYear(request.publishYear());
         }
-
         if (request.price() != null) {
             book.setPrice(request.price());
         }
-
         if (request.status() != null) {
             book.setStatus(request.status());
         }
-
         if (request.totalCopies() != null) {
-
             int newTotalCopies = request.totalCopies();
             int borrowedCopies = book.getTotalCopies() - book.getAvailableCopies();
-
             if (newTotalCopies < borrowedCopies) {
                 throw new BusinessException("Cannot reduce total copies below borrowed copies");
-
             }
-
             int difference = newTotalCopies - book.getTotalCopies();
-            int newAvailableCopies = book.getAvailableCopies() + difference;
-
             book.setTotalCopies(newTotalCopies);
-
-            book.setAvailableCopies(newAvailableCopies);
-
+            book.setAvailableCopies(book.getAvailableCopies() + difference);
         }
+
         book.setUpdatedAt(LocalDateTime.now());
         Book savedBook = bookRepository.save(book);
+        eventLogger.info(
+                "BOOK_UPDATE_SUCCESS",
+                SecurityUtils.getCurrentUsername(),
+                "bookId=" + savedBook.getId() + " bookCode=" + savedBook.getBookCode()
+        );
         return mapToResponse(savedBook);
     }
 
     private String generateBookCode() {
-
         String code;
-
         do {
-
             code = String.valueOf((long) (Math.random() * 90000000000000L + 10000000000000L));
-
         } while (bookRepository.existsByBookCode(code));
-
         return code;
     }
 
     private AppUser getCurrentUser() {
-
-        return appUserRepository.findByUsername(SecurityUtils.getCurrentUsername()).orElseThrow(() -> new BusinessException("User not found"));
+        return appUserRepository.findByUsername(SecurityUtils.getCurrentUsername())
+                .orElseThrow(() -> new BusinessException("User not found"));
     }
 
     private BookResponse mapToResponse(Book book) {
-
-        return new BookResponse(book.getId(), book.getBookCode(), book.getIsbn(), book.getTitle(), book.getAuthor(), book.getCategory(), book.getPublisher(), book.getPublishYear(), book.getTotalCopies(), book.getAvailableCopies(), book.getTotalCopies() - book.getAvailableCopies(), book.getPrice(), book.getStatus(), book.getCreatedAt(), book.getUpdatedAt());
+        return new BookResponse(
+                book.getId(),
+                book.getBookCode(),
+                book.getIsbn(),
+                book.getTitle(),
+                book.getAuthor(),
+                book.getCategory(),
+                book.getPublisher(),
+                book.getPublishYear(),
+                book.getTotalCopies(),
+                book.getAvailableCopies(),
+                book.getTotalCopies() - book.getAvailableCopies(),
+                book.getPrice(),
+                book.getStatus(),
+                book.getCreatedAt(),
+                book.getUpdatedAt()
+        );
     }
-
 }

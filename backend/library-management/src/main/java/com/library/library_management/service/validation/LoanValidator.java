@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -34,6 +35,15 @@ public class LoanValidator {
 
         if (book.getAvailableCopies() <= 0) {
             throw new BusinessException("Book is not available");
+        }
+    }
+
+    public void validateNoCurrentLoan(Member member, Book book) {
+
+        boolean alreadyHasBook = loanRepository.existsCurrentActiveLoan(member.getId(), book.getId(), Enums.LoanStatus.SUCCESS, List.of(Enums.LoanType.BORROW, Enums.LoanType.RENEW));
+
+        if (alreadyHasBook) {
+            throw new BusinessException("Member already has this book");
         }
     }
 

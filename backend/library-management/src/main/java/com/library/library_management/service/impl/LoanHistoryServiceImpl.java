@@ -23,9 +23,9 @@ public class LoanHistoryServiceImpl implements LoanHistoryService {
     private final LibraryProperties properties;
 
     @Override
-    public Page<LoanHistoryResponse> searchHistory(String membershipNumber, String bookCode, Enums.LoanType type, String state, LocalDateTime from, LocalDateTime to, Pageable pageable) {
+    public Page<LoanHistoryResponse> searchHistory(String membershipNumber, String bookCode, Enums.LoanType type, Enums.LoanStatus status, Enums.LoanState state, LocalDateTime from, LocalDateTime to, Pageable pageable) {
 
-        Specification<LoanTransaction> specification = Specification.unrestricted();
+        Specification<LoanTransaction> specification = (root, query, cb) -> cb.conjunction();
 
         if (membershipNumber != null && !membershipNumber.isBlank()) {
             specification = specification.and(LoanSpecification.hasMember(membershipNumber));
@@ -39,7 +39,11 @@ public class LoanHistoryServiceImpl implements LoanHistoryService {
             specification = specification.and(LoanSpecification.hasType(type));
         }
 
-        if (state != null && !state.isBlank()) {
+        if (status != null) {
+            specification = specification.and(LoanSpecification.hasStatus(status));
+        }
+
+        if (state != null) {
             specification = specification.and(LoanSpecification.hasState(state));
         }
 

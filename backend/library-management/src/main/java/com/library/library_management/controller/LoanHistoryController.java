@@ -6,6 +6,8 @@ import com.library.library_management.service.LoanHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,23 +25,24 @@ public class LoanHistoryController {
 
     @GetMapping("/history")
     public Page<LoanHistoryResponse> searchHistory(
-
             @RequestParam(required = false) String membershipNumber,
-
             @RequestParam(required = false) String bookCode,
-
             @RequestParam(required = false) Enums.LoanType type,
-
-            @RequestParam(required = false) String state,
-
+            @RequestParam(required = false) Enums.LoanStatus status,
+            @RequestParam(required = false) Enums.LoanState state,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-
-            Pageable pageable
-
+            @PageableDefault(size = 10, sort = "requestDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-
-        return loanHistoryService.searchHistory(membershipNumber, bookCode, type, state, from, to, pageable);
+        return loanHistoryService.searchHistory(
+                membershipNumber,
+                bookCode,
+                type,
+                status,
+                state,
+                from,
+                to,
+                pageable
+        );
     }
 }

@@ -36,7 +36,6 @@ function Landing() {
             bg-slate-50
             "
     >
-
       <nav
         className="
                 flex
@@ -75,7 +74,6 @@ function Landing() {
         </button>
       </nav>
 
-
       <section
         className="
                 px-6
@@ -97,22 +95,7 @@ function Landing() {
           <br />
           Management System
         </h2>
-
-        <p
-          className="
-                    mt-6
-                    max-w-2xl
-                    mx-auto
-                    text-lg
-                    text-slate-600
-                    "
-        >
-          A modern platform to manage books, members, loans and library
-          operations in one place.
-        </p>
-
       </section>
-
 
       <section
         className="
@@ -184,18 +167,6 @@ function Landing() {
           })}
         </div>
       </section>
-
-
-      <footer
-        className="
-                text-center
-                py-6
-                text-slate-500
-                text-sm
-                "
-      >
-        © 2026 Library Management System
-      </footer>
     </div>
   );
 }

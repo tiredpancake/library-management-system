@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import FormInput from "../FormInput";
 
-function RenewModal({ open, onClose, onSubmit, trackingCode = "" }) {
+function RenewModal({
+  open,
+  onClose,
+  onSubmit,
+  trackingCode = "",
+  error = "",
+}) {
   const [code, setCode] = useState("");
 
   const [errors, setErrors] = useState({});
@@ -66,6 +72,11 @@ mb-5
         </h2>
 
         <form onSubmit={submit} className="space-y-4">
+          {error && (
+            <div className="bg-red-100 text-red-700 border border-red-300 p-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
           <FormInput
             label="Tracking Code"
             name="trackingCode"

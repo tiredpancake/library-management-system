@@ -9,56 +9,33 @@ import java.time.LocalDateTime;
 public class LoanSpecification {
 
     public static Specification<LoanTransaction> hasMember(String membershipNumber) {
-
-        if (membershipNumber == null || membershipNumber.isBlank()) {
-            return Specification.unrestricted();
-        }
-
-        return (root, query, cb) -> cb.equal(root.get("member").get("membershipNumber"), membershipNumber.trim());
+        return (root, query, cb) -> membershipNumber == null || membershipNumber.isBlank() ? null : cb.equal(root.get("member").get("membershipNumber"), membershipNumber);
     }
 
     public static Specification<LoanTransaction> hasBook(String bookCode) {
-
-        if (bookCode == null || bookCode.isBlank()) {
-            return Specification.unrestricted();
-        }
-
-        return (root, query, cb) -> cb.equal(root.get("book").get("bookCode"), bookCode.trim());
+        return (root, query, cb) -> bookCode == null || bookCode.isBlank() ? null : cb.equal(root.get("book").get("bookCode"), bookCode);
     }
 
     public static Specification<LoanTransaction> hasType(Enums.LoanType type) {
-
-        if (type == null) {
-            return Specification.unrestricted();
-        }
-
-        return (root, query, cb) -> cb.equal(root.get("type"), type);
+        return (root, query, cb) -> type == null ? null : cb.equal(root.get("type"), type);
     }
 
     public static Specification<LoanTransaction> hasStatus(Enums.LoanStatus status) {
-
-        if (status == null) {
-            return Specification.unrestricted();
-        }
-
-        return (root, query, cb) -> cb.equal(root.get("status"), status);
+        return (root, query, cb) -> status == null ? null : cb.equal(root.get("status"), status);
     }
 
-    public static Specification<LoanTransaction> hasState(String state) {
+    public static Specification<LoanTransaction> hasState(Enums.LoanState state) {
 
-        if (state == null || state.isBlank()) {
-            return Specification.unrestricted();
+        // No state filter was requested.
+        if (state == null) {
+            return null;
         }
 
-        String normalized = state.trim().toUpperCase();
+        return switch (state) {
 
-        return switch (normalized) {
+            case RETURNED -> (root, query, cb) -> cb.isNotNull(root.get("returnDate"));
 
-            case "RETURNED" ->
-                    (root, query, cb) -> cb.and(cb.equal(root.get("type"), Enums.LoanType.RETURN), cb.isNotNull(root.get("returnDate")));
-
-
-            case "NOT_RETURNED" -> (root, query, cb) -> {
+            case NOT_RETURNED -> (root, query, cb) -> {
 
                 var childSubquery = query.subquery(Long.class);
 
@@ -77,8 +54,7 @@ public class LoanSpecification {
                         cb.not(cb.exists(childSubquery)));
             };
 
-
-            case "OVERDUE" -> (root, query, cb) -> {
+            case OVERDUE -> (root, query, cb) -> {
 
                 var childSubquery = query.subquery(Long.class);
 
@@ -98,27 +74,14 @@ public class LoanSpecification {
 
                         cb.not(cb.exists(childSubquery)));
             };
-
-            default ->
-                    throw new IllegalArgumentException("Invalid loan history state. " + "Use RETURNED, NOT_RETURNED, or OVERDUE.");
         };
     }
 
     public static Specification<LoanTransaction> dateFrom(LocalDateTime from) {
-
-        if (from == null) {
-            return Specification.unrestricted();
-        }
-
-        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("requestDate"), from);
+        return (root, query, cb) -> from == null ? null : cb.greaterThanOrEqualTo(root.get("requestDate"), from);
     }
 
     public static Specification<LoanTransaction> dateTo(LocalDateTime to) {
-
-        if (to == null) {
-            return Specification.unrestricted();
-        }
-
-        return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("requestDate"), to);
+        return (root, query, cb) -> to == null ? null : cb.lessThanOrEqualTo(root.get("requestDate"), to);
     }
 }

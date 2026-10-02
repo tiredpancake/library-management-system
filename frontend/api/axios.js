@@ -6,18 +6,15 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const basicAuth = sessionStorage.getItem("basicAuth");
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (basicAuth) {
+      config.headers.Authorization = `Basic ${basicAuth}`;
     }
 
     return config;
   },
-
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
 export default api;

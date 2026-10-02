@@ -120,7 +120,9 @@ overflow-x-auto
         onClose={() => setOpen(false)}
         onSubmit={async (data) => {
           await payFine(data);
+
           await load();
+
           setOpen(false);
         }}
       />

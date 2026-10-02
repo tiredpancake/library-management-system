@@ -22,6 +22,10 @@ public class Enums {
         PENDING, SUCCESS, FAILED
     }
 
+    public enum LoanState {
+        RETURNED, NOT_RETURNED, OVERDUE
+    }
+
     public enum FineStatus {
         UNPAID, PARTIALLY_PAID, PAID
     }

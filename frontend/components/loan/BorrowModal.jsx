@@ -6,7 +6,7 @@ const EMPTY_FORM = {
   bookCode: "",
 };
 
-function BorrowModal({ open, onClose, onSubmit, error }) {
+function BorrowModal({ open, onClose, onSubmit, error = "" }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
 
@@ -67,13 +67,13 @@ function BorrowModal({ open, onClose, onSubmit, error }) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-md">
         <h2 className="text-xl font-bold mb-5">Borrow Book</h2>
-        {error && (
-          <div className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            <div className="font-semibold">Borrow failed</div>
-            <div className="mt-1 break-words">{error}</div>
-          </div>
-        )}
+
         <form onSubmit={submit} className="space-y-4">
+          {error && (
+            <div className="bg-red-100 text-red-700 border border-red-300 p-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
           <FormInput
             label="Membership Number"
             name="membershipNumber"

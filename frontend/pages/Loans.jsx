@@ -97,8 +97,11 @@ function Loans() {
 
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
   const [borrowError, setBorrowError] = useState("");
+  const [returnError, setReturnError] = useState("");
+  const [renewError, setRenewError] = useState("");
+  const [search, setSearch] = useState("");
+
   const [filters, setFilters] = useState({
     membershipNumber: "",
     bookCode: "",
@@ -153,6 +156,8 @@ function Loans() {
       from: "",
       to: "",
     });
+    // Initial load only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateFilter = (field, value) => {
@@ -219,9 +224,10 @@ function Loans() {
   );
 
   const openBorrow = () => {
+    setError("");
+    setBorrowError("");
     setLastTransaction(null);
     setBorrowOpen(true);
-    setBorrowError("");
   };
 
   const closeBorrow = () => {
@@ -242,6 +248,7 @@ function Loans() {
 
   const openReturn = (loan) => {
     setError("");
+    setReturnError("");
     setLastTransaction(null);
     setSelectedLoan(loan);
     setReturnOpen(true);
@@ -250,11 +257,12 @@ function Loans() {
   const closeReturn = () => {
     setReturnOpen(false);
     setSelectedLoan(null);
-    setError("");
+    setReturnError("");
   };
 
   const openRenew = (loan) => {
     setError("");
+    setRenewError("");
     setLastTransaction(null);
     setSelectedLoan(loan);
     setRenewOpen(true);
@@ -263,7 +271,7 @@ function Loans() {
   const closeRenew = () => {
     setRenewOpen(false);
     setSelectedLoan(null);
-    setError("");
+    setRenewError("");
   };
 
   const openStatus = () => {
@@ -296,14 +304,15 @@ function Loans() {
   const handleBorrow = async (data) => {
     try {
       setBorrowError("");
-
       const response = await borrowBook(data);
-
       setLastTransaction(response.data);
-
-      await load();
-
       closeBorrow();
+
+      try {
+        await load();
+      } catch (err) {
+        setError(getErrorMessage(err, "Failed to load loans"));
+      }
     } catch (err) {
       setBorrowError(getErrorMessage(err, "Borrow failed"));
     }
@@ -311,25 +320,35 @@ function Loans() {
 
   const handleReturn = async (data) => {
     try {
-      setError("");
+      setReturnError("");
       const response = await returnBook(data);
       setLastTransaction(response.data);
-      await load();
       closeReturn();
+
+      try {
+        await load();
+      } catch (err) {
+        setError(getErrorMessage(err, "Failed to load loans"));
+      }
     } catch (err) {
-      setError(getErrorMessage(err, "Return failed"));
+      setReturnError(getErrorMessage(err, "Return failed"));
     }
   };
 
   const handleRenew = async (data) => {
     try {
-      setError("");
+      setRenewError("");
       const response = await renewLoan(data);
       setLastTransaction(response.data);
-      await load();
       closeRenew();
+
+      try {
+        await load();
+      } catch (err) {
+        setError(getErrorMessage(err, "Failed to load loans"));
+      }
     } catch (err) {
-      setError(getErrorMessage(err, "Renew failed"));
+      setRenewError(getErrorMessage(err, "Renew failed"));
     }
   };
 
@@ -357,6 +376,9 @@ function Loans() {
               Loans
             </h1>
           </div>
+          <p className="mt-2 text-sm text-slate-500">
+            Manage borrowing, returns, renewals, and transaction status.
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -453,6 +475,10 @@ function Loans() {
               <h2 className="text-lg font-semibold text-slate-900">
                 Transaction History
               </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {filteredLoans.length} transactions shown
+                {hasActiveFilters ? " with the selected filters" : ""}.
+              </p>
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -753,6 +779,7 @@ function Loans() {
         bookCode={selectedLoan?.bookCode || ""}
         onClose={closeReturn}
         onSubmit={handleReturn}
+        error={returnError}
       />
 
       <RenewModal
@@ -760,6 +787,7 @@ function Loans() {
         trackingCode={selectedLoan?.trackingCode || ""}
         onClose={closeRenew}
         onSubmit={handleRenew}
+        error={renewError}
       />
 
       <CheckStatusModal
